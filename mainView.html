@@ -1,0 +1,295 @@
+<script src="./js/jquery-2.0.2.min.js"></script>
+<script src="./shapeList.js"></script>
+<script src="./shape.js"></script>
+<script src="./canvas.js"></script>
+
+<style>
+html, body { padding:0; margin:0; }
+</style>
+
+<!-- wColorPicker -->
+<link rel="Stylesheet" type="text/css" href="./js/wColorPicker.css" />
+<script type="text/javascript" src="./js/wColorPicker.js"></script>
+
+<script>
+
+$(function(){
+	pWidth = $(parent.mainViewFrame).width();
+	pHeight = $(parent.mainViewFrame).height();
+
+	$("body").width(pWidth);
+	$("body").height(pHeight-30);
+
+	var sx, sy, ex, ey;
+	var down_flag = 0;
+	var resize_flag = 0;
+	/*gs없애고 selList가 1일 때 gs로 draw*/
+	$("#mainCanvas").mousedown(function(e){
+		sx = e.offsetX;
+		sy = e.offsetY;
+		down_flag = 1;
+
+		if(shapeName=="select"){
+			var pixel = c.ctx.getImageData(e.offsetX, e.offsetY, 1, 1);
+			if(pixel.data[3]>0){
+				for(i=c.boxes.length-1; i>=0; i--){
+					clear(c.gctx);
+					c.boxes[i].draw(c.gctx);
+					var gpixel = c.gctx.getImageData(sx, sy, 1, 1);
+					if(gpixel.data[3] > 0){
+						if(c.selList[i]==1){
+							for (var j=0; j<8; j++) {
+								var cur = c.boxes[i].selectionHandles[j];
+								if(e.offsetX >= cur.x && e.offsetX <= cur.x+cur.selBoxSize && e.offsetY >= cur.y && e.offsetY <= cur.y+cur.selBoxSize ){
+									resize_flag = 1;
+									console.log(1);
+								}
+							}
+							break;
+						}else{
+							c.select(sx, sy, sx, sy);
+							break;
+						}
+					}
+				}
+			}else{
+				c.selList = [];
+			}
+		}else{
+			c.addShape(shapeName, sx, sy, sx, sy, 1);
+		}
+	});
+
+	$("#mainCanvas").mousemove(function(e){
+		if(shapeName=="select"){
+			var pixel = c.ctx.getImageData(e.offsetX, e.offsetY, 1, 1);
+			if(pixel.data[3]>0){
+				$(this).css("cursor", "move");
+
+				if(c.selList.length>0){
+					for(i in c.selList){
+						if(c.selList[i]==1){
+							for (var j=0; j<8; j++) {
+								var cur = c.boxes[i].selectionHandles[j];
+								if(e.offsetX >= cur.x && e.offsetX <= cur.x+cur.selBoxSize && e.offsetY >= cur.y && e.offsetY <= cur.y+cur.selBoxSize ){
+									switch(j){
+										case 0 :
+											$(this).css("cursor", "nw-resize");
+											break;
+										case 1 :
+											$(this).css("cursor", "n-resize");
+											break;
+										case 2 :
+											$(this).css("cursor", "ne-resize");
+											break;
+										case 3 :
+											$(this).css("cursor", "w-resize");
+											break;
+										case 4 :
+											$(this).css("cursor", "e-resize");
+											break;
+										case 5 :
+											$(this).css("cursor", "sw-resize");
+											break;
+										case 6 :
+											$(this).css("cursor", "s-resize");
+											break;
+										case 7 :
+											$(this).css("cursor", "se-resize");
+											break;
+									}
+								}
+							}
+						}
+
+					}
+				}
+				if(resize_flag==1){
+					console.log(2);
+				}
+			}else{
+				$(this).css("cursor", "Auto");
+			}
+
+			if(down_flag==1){
+				if(c.selList.length>0){
+					diffX = sx-e.offsetX;
+					diffY = sy-e.offsetY;
+					sx = e.offsetX;
+					sy = e.offsetY;
+					for(i in c.selList){
+						c.boxes[i].sx -= diffX;
+						c.boxes[i].ex -= diffX;
+						c.boxes[i].sy -= diffY;
+						c.boxes[i].ey -= diffY;
+						c.boxes[i].x -= diffX;
+						c.boxes[i].y -= diffY;
+					}
+				}
+			}
+		}else{
+			$(this).css("cursor", "crosshair");
+			if(down_flag==1){
+				c.addShape(shapeName, sx, sy, e.offsetX, e.offsetY, 1);
+			}
+		}
+	});
+
+	$("#mainCanvas").mouseup(function(e){
+		ex = e.offsetX;
+		ey = e.offsetY;
+		down_flag = 0;
+		resize_flag = 0;
+		console.log(3);
+
+		if(shapeName=="select"){
+			if(c.selList.length==0){
+				c.select(sx, sy, ex, ey);
+			}else{
+				for(i in c.selList){
+					parentC.boxes[i].sx = c.boxes[i].sx;
+					parentC.boxes[i].ex = c.boxes[i].ex;
+					parentC.boxes[i].sy = c.boxes[i].sy;
+					parentC.boxes[i].ey = c.boxes[i].ey;
+					parentC.boxes[i].x = c.boxes[i].x;
+					parentC.boxes[i].y = c.boxes[i].y;
+				}
+			}
+		}else{
+			parentC.sColor = c.sColor;
+			parentC.fColor = c.fColor;
+			parentC.addShape(shapeName, sx, sy, ex, ey, 0);
+			c.addShape(shapeName, sx, sy, ex, ey, 0);
+			c.gs = null;
+			c.selList = [];
+			shapeName = "select";
+		}
+	});
+
+	
+	$("#fillColorPicker").wColorPicker({
+		mode: "click",
+		initColor: "#CCFF00",
+		buttonSize: 10,
+		showSpeed: 300,
+		hideSpeed: 300,
+		onSelect: function(selectColor){
+			c.fColor = selectColor;
+			if($(c.selList).length > 0){
+				for(i=0; i<c.boxes.length; i++){
+					if(c.selList[i]==1){
+						c.setFillColor(i, selectColor);
+						parentC.setFillColor(i, selectColor);
+					}
+				}
+			}
+		}
+	});
+
+	$("#strokeColorPicker").wColorPicker({
+		mode: "click",
+		initColor: "#660066",
+		buttonSize: 10,
+		showSpeed: 300,
+		hideSpeed: 300,
+		onSelect: function(selectColor){
+			c.sColor = selectColor;
+			if($(c.selList).length > 0){
+				for(i=0; i<c.boxes.length; i++){
+					if(c.selList[i]==1){
+						c.setStrokeColor(i, selectColor);
+						parentC.setStrokeColor(i, selectColor);
+					}
+				}
+			}
+		}
+	});
+});
+
+var shapeName = 'select';
+var c =  new canvas();
+var parentC;
+var timer;
+
+function setShape(name){
+	shapeName = name;
+}
+
+function loadCanvas(canvasNum){
+	// 부모에서 도형리스트 복사
+	parentC = parent.canvases[canvasNum];
+	clearBox(c);
+	for(i=0; i<parentC.boxes.length; i++){
+		c.boxes.push(parentC.boxes[i]);
+	}
+
+	// 고스트 캔버스 선택
+	var position = $("#mainCanvas").position();
+	var gCanvas = $("<canvas id='gcanvas' width='640' height='480' style='position:absolute; z-index:-1;');'>This text is displayed if your browser does not support HTML5 Canvas.</canvas>");
+	gCanvas.css("top", position.top);
+	gCanvas.css("left", position.left);
+	gCanvas.insertAfter("#mainCanvas");
+	c.gctx = gCanvas.get(0).getContext("2d");
+
+	// 캔버스 선택
+	c.ctx = $("#mainCanvas").get(0).getContext("2d");	
+
+	// 캔버스 비우고 다시 그려주기
+	clear(c.ctx);
+	c.draw();
+	
+	// 선택 초기화
+	c.selList = [];
+
+	timer = setInterval(function(){intervalDraw(c);}, 20);
+}
+
+function clear(ctx){
+	ctx.clearRect(0,0,640,480);
+}
+
+function clearBox(c){
+	c.boxes = [];
+}
+
+/* 후에 validation을 줄것인지? 의논해봅시다. 아직은 버벅거리지 않음. */
+function intervalDraw(c){
+	clear(c.ctx);
+	c.draw();
+	clear(parentC.ctx);
+	parentC.draw();
+}
+
+$(window).resize(function(){
+	pWidth = $(parent.mainViewFrame).width();
+	pHeight = $(parent.mainViewFrame).height();
+
+	$("body").width(pWidth);
+	$("body").height(pHeight-30);
+
+	r = pWidth/640;
+
+	$("#mainCanvas").css("zoom", r);
+	$("#gcanvas").css("zoom", r);
+});
+</script>
+
+<html>
+<body>
+	<div id="btnGroup" style="min-width:700px;height:30px;background-color:pink;">
+		<input type="button" value="선택" onclick="setShape('select');">
+		브러쉬 두께<input type="text" id="brush_size" value="1" style="width:50px;">
+		투명도 0~1<input type="text" id="opacity" value="1" style="width:50px;">
+		<input type="button" value="선" onclick="setShape('line');">
+		<input type="button" value="네모" onclick="setShape('rect');">
+		<input type="button" value="원" onclick="setShape('circle');">
+		<input type="button" value="텍스트" onclick="setShape('text');">
+		<div style="display:inline;">
+			선색<div id="strokeColorPicker" style="display:inline;"></div>
+			배경색<div id="fillColorPicker" style="display:inline;"></div>
+		</div>
+	</div>
+
+	<canvas id="mainCanvas" width="640" height="480" style="background-color:#fff; zoom:1;"></canvas>
+</body>
+</html>
