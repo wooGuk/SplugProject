@@ -1,0 +1,91 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>ppt_1</title>
+<style type="text/css">
+	html { height:100%; margin:0; padding:0; }
+	body { height:100%; margin:0; padding:0; }
+</style>
+<script src="/jquery-2.0.2.min.js"></script>
+<script src="/ppt/shapeList.js"></script>
+<script src="/ppt/shape.js"></script>
+<script src="/ppt/canvas.js"></script>
+<script>
+
+$(function(){
+	wWidth = $(window).width();
+	wHeight = $(window).height();
+	$("#rightTab").width(wWidth-320);
+	$("#mainViewFrame").width(wWidth-320);
+	$("#mainViewFrame").height(wHeight-30);
+
+	$("#mainViewFrame").load(function(){
+		if($("#canvasView").html()==""){
+			addCanvas();
+			loadCanvas(0);
+		}
+	});
+
+	$("#call_list").mouseenter(function(){
+		console.log(1);
+		$("#listlist").show();
+	}).mouseleave(function(){
+		console.log(1);
+		$("#listlist").hide();
+	});
+});
+
+var canvases = [];
+
+function addCanvas(){
+	var makeCanvas = $("<canvas id='canvas"+canvases.length+"' canvasNum='"+canvases.length+"' width='700' height='400' style='border:1px #ddd solid;width:280px;height:200px;' onclick='loadCanvas("+canvases.length+");'>This text is displayed if your browser does not support HTML5 Canvas.</canvas>");
+	makeCanvas.appendTo("#canvasView");
+
+	var c = new canvas();
+	c.ctx = makeCanvas.get(0).getContext("2d");
+
+	canvases.push(c);
+}
+
+function loadCanvas(num){
+	mainViewFrame.loadCanvas(num);
+}
+
+$(window).resize(function(){
+	wWidth = $(window).width();
+	wHeight = $(window).height();
+	$("#rightTab").width(wWidth-320);
+	$("#mainViewFrame").width(wWidth-320);
+	$("#mainViewFrame").height(wHeight-30);
+});
+
+</script>
+
+
+</head>
+<body>
+	<div style="width:100%;height:100%;overflow:hidden;">
+		<div id="leftTab" style="width:320px;height:100%;float:left; background-color:#bce;overflow-y:scroll;">
+			<div style="height:30px; background-color:#abc;">프레젠테이션 리스트</div>
+			<div id="canvasView" style="text-align:center; padding:7px;"></div>
+			<div style="text-align:center; padding:7px; border:1px #ddd solid; width:280px; height:200px;" onclick="addCanvas();">+</div>
+		</div>
+		<div id="rightTab" style="height:100%;float:left;">
+			<div id="btnGroup" style="min-width:700px;height:30px;background-color:pink;">
+				<input type="button" value="선택" onclick="mainViewFrame.setShape('select');">
+				브러쉬 두께<input type="text" id="brush_size" value="1" style="width:50px;">
+				투명도 0~1 <input type="text" id="opacity" value="1" style="width:50px;">
+				<input type="button" value="선" onclick="mainViewFrame.setShape('line');">
+				<input type="button" value="네모" onclick="mainViewFrame.setShape('rect');">
+				<input type="button" value="원" onclick="mainViewFrame.setShape('circle');">
+				<input type="button" value="텍스트" onclick="mainViewFrame.setShape('text');">
+			</div>
+			<div id="call_list" style="width:100px;height:30px;">도형리스트
+				<div id="listlist" style="border:1px solid #ddd;position:absolute; top:30px; left:400px;display:none;"><table><tr><td>aa</td><td>bb</td><td>cc</td><td>dd</td></tr></table></div>
+			</div>
+			<iframe id="mainViewFrame" src="/ppt/mainView.html" frameborder="0" scrolling="yes" allowTransparency="false" style="background-color:#eee;"></iframe>
+		</div>
+	</div>
+</body>
+</html>

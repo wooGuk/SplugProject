@@ -7,12 +7,14 @@
 	html { height:100%; margin:0; padding:0; }
 	body { height:100%; margin:0; padding:0; }
 </style>
+<link rel="Stylesheet" type="text/css" href="./bubble.css">
 <script src="./js/jquery-2.0.2.min.js"></script>
 <script src="./shapeList.js"></script>
 <script src="./shape.js"></script>
 <script src="./canvas.js"></script>
 
-<script src="http://203.253.20.235:8005/socket.io/socket.io.js"></script>
+
+<script src="http://203.253.20.234:8005/socket.io/socket.io.js"></script>
 
 <script>
 
@@ -73,24 +75,22 @@ $(window).resize(function(){
 <script>
 /*socket*/
 
+var selc;
 var roomName = 1;
 var chatStory = [];
 var pop=0;
+var push=0;
 
-var socket = io.connect('http://203.253.20.235:8005');
+var socket = io.connect('http://203.253.20.234:8005');
 socket.on('message', function (data) {
 	message_list.innerHTML = message_list.innerHTML + data.user_name+" :" + data.message+"<br />"  ;
+	pushChat();
 	overal();
 });
 
 socket.on('my_message', function (data) {
 	message_list.innerHTML = message_list.innerHTML + data.user_name+" :" + data.message +"<br />" ;
 	overal();
-});
-
-socket.on('draw', function (data) {
-	paint.broadType = data.type;
-	paint.broadPaint(data.sX, data.sY, data.eX, data.eY);
 });
 
 function set_room(){
@@ -109,7 +109,7 @@ function send() {
 	}*/
 	// send는 message만 가능. emit으로 사용자지정 가능.
 	//user_name.value="me";
-	console.log(chatStory);
+
 	socket.emit('my other event', {user_name:"you", message:input.value});
 	chatStory += "you : " + input.value +"\n";
 	//overal();
@@ -125,14 +125,40 @@ function layer_popup()
 {
 	if(pop == 0){
 		var layer = document.getElementById("chat");
+		colorChange();
 		layer.style.visibility="visible";
 		pop = 1;
+		pushChat();
 	}
 	else{
 		var layer = document.getElementById("chat");
+		colorChange();
 		layer.style.visibility="hidden";
 		pop = 0;
+		push = 0;
 	}
+}
+function pushChat()
+{
+	
+	if(pop == 0 && this.push == 0){
+		var pushChange = document.getElementById("pushpush");
+		pushChange.style.visibility="visible";
+		this.push = 1;
+	}
+	else
+	{
+		var pushChange = document.getElementById("pushpush");
+		pushChange.style.visibility="hidden";
+	}
+}
+function colorChange()
+{
+	var color = document.getElementById("chat-button").style.background;
+	if(color == "red")
+		document.getElementById("chat-button").style.background="";
+	else
+		document.getElementById("chat-button").style.background="red";
 }
 </script>
 
@@ -279,10 +305,15 @@ function layer_popup()
 			<iframe id="mainViewFrame" src="/ppt/mainView.html" frameborder="0" scrolling="yes" allowTransparency="false" style="background-color:#eee;"></iframe>
 		</div>
 	</div>
-
+	<!-- 푸쉬알림 -->
+	<div class="bubble" id="pushpush" style="position:absolute; clear:left; float:right; right:18px; bottom:20px; visibility: hidden;">
+		<p class="lab">
+			메시지가 도착했습니다.
+		</p>
+	</div>
 	<!-- 채팅창 -->
 	<div style="position:absolute; clear:left; float:right; right:18px; bottom:0px;">
-		<input type="button" value="채팅" onclick="layer_popup()">
+		<input id="chat-button" type="button" onclick="layer_popup()" style ="background:red; filiter:alpha(opacity=10); opacity:0.5; -moz-opacity:0.5;" value="채팅">
 	</div>
 	<div id="chat" style="position:absolute; clear:left; float:right; right:18px; bottom:20px; border:double; width:300px; height:250px; visibility: hidden; background-color:white;">
 		<div id ="message_list" style="position:absolute; width:300px; height:200px; overFlow:auto;"></div>

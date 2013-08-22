@@ -10,6 +10,7 @@ html, body { padding:0; margin:0; }
 <!-- wColorPicker -->
 <link rel="Stylesheet" type="text/css" href="./js/wColorPicker.css" />
 <script type="text/javascript" src="./js/wColorPicker.js"></script>
+<script src="http://203.253.20.234:8005/socket.io/socket.io.js"></script>
 
 <script>
 
@@ -140,7 +141,7 @@ $(function(){
 		ey = e.offsetY;
 		down_flag = 0;
 		resize_flag = 0;
-		console.log(3);
+		
 
 		if(shapeName=="select"){
 			if(c.selList.length==0){
@@ -160,6 +161,7 @@ $(function(){
 			parentC.fColor = c.fColor;
 			parentC.addShape(shapeName, sx, sy, ex, ey, 0);
 			c.addShape(shapeName, sx, sy, ex, ey, 0);
+			socket.emit('paint event', {type:this.shapeName, sx:this.sx, sy:this.sy, ex:this.ex, ey:this.ey});
 			c.gs = null;
 			c.selList = [];
 			shapeName = "select";
@@ -204,6 +206,16 @@ $(function(){
 			}
 		}
 	});
+});
+
+var socket = io.connect('http://203.253.20.234:8005');
+
+socket.on('draw', function (data) {
+	 //shapeName = data.type;
+	  console.log(1);
+	 parentC.addShape(data.type, data.sx, data.sy, data.ex, data.ey, 0);
+	 c.addShape(data.type, data.sx, data.sy, data.ex, data.ey, 0);
+	
 });
 
 var shapeName = 'select';
