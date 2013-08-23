@@ -12,6 +12,18 @@ html, body { padding:0; margin:0; }
 <script type="text/javascript" src="./js/wColorPicker.js"></script>
 
 <script>
+$(window).resize(function(){
+	pWidth = $(parent.mainViewFrame).width();
+	pHeight = $(parent.mainViewFrame).height();
+
+	$("body").width(pWidth);
+	$("body").height(pHeight-30);
+
+	r = pWidth/640;
+
+	//$("#mainCanvas").css("zoom", r);
+	//$("#gcanvas").css("zoom", r);
+});
 
 $(function(){
 	pWidth = $(parent.mainViewFrame).width();
@@ -40,7 +52,6 @@ $(function(){
 					var gpixel = c.gctx.getImageData(sx, sy, 1, 1);
 					if(gpixel.data[3] > 0){
 						if(c.selList[i]==1){
-							
 							break;
 						}else{
 							c.select(sx, sy, sx, sy);
@@ -112,7 +123,7 @@ $(function(){
 					}
 				}
 				if(resize_flag==1){
-					
+					console.log(2);
 				}
 			}else{
 				$(this).css("cursor", "Auto");
@@ -168,11 +179,8 @@ $(function(){
 			parentC.addShape(shapeName, sx, sy, ex, ey, 0);
 			c.addShape(shapeName, sx, sy, ex, ey, 0);
 			c.gs = null;
-			//c.selList = [];
-			
-			socket.emit('paint event', {type:shapeName, sx:sx, sy:sy, ex:ex, ey:ey, sc:c.sColor, fc:c.fColor});
+			c.selList = [];
 			shapeName = "select";
-			
 		}
 	});
 
@@ -216,17 +224,6 @@ $(function(){
 	});
 });
 
-var socket = io.connect('http://203.253.20.234:8005');
-
-socket.on('draw', function (data) {
-	parentC.sColor = data.sc;
-	parentC.fColor = data.fc;
-	parentC.addShape(data.type, data.sx, data.sy, data.ex, data.ey, 0);
-
-	c.sColor = data.sc;
-	c.fColor = data.fc;
-	c.addShape(data.type, data.sx, data.sy, data.ex, data.ey, 0);
-});
 var shapeName = 'select';
 var c =  new canvas();
 var parentC;
@@ -263,7 +260,6 @@ function loadCanvas(canvasNum){
 	c.selList = [];
 
 	timer = setInterval(function(){intervalDraw(c);}, 20);
-	
 }
 
 function clear(ctx){
@@ -281,19 +277,6 @@ function intervalDraw(c){
 	clear(parentC.ctx);
 	parentC.draw();
 }
-
-$(window).resize(function(){
-	pWidth = $(parent.mainViewFrame).width();
-	pHeight = $(parent.mainViewFrame).height();
-
-	$("body").width(pWidth);
-	$("body").height(pHeight-30);
-
-	r = pWidth/640;
-
-	$("#mainCanvas").css("zoom", r);
-	$("#gcanvas").css("zoom", r);
-});
 </script>
 
 <html>

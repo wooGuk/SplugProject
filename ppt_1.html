@@ -18,6 +18,15 @@
 
 <script>
 
+
+$(window).resize(function(){
+	wWidth = $(window).width();
+	wHeight = $(window).height();
+	$("#rightTab").width(wWidth-320);
+	$("#mainViewFrame").width(wWidth-320);
+	$("#mainViewFrame").height(wHeight-30);
+});
+
 $(function(){
 	wWidth = $(window).width();
 	wHeight = $(window).height();
@@ -64,14 +73,6 @@ function addCanvas(){
 function loadCanvas(num){
 	mainViewFrame.loadCanvas(num);
 }
-
-$(window).resize(function(){
-	wWidth = $(window).width();
-	wHeight = $(window).height();
-	$("#rightTab").width(wWidth-320);
-	$("#mainViewFrame").width(wWidth-320);
-	$("#mainViewFrame").height(wHeight-30);
-});
 
 </script>
 
@@ -321,7 +322,7 @@ function colorChange()
 					</tr>
 				</table>
 			</div>
-			<iframe id="mainViewFrame" src="qqq.kr/ppt/mainView.html" frameborder="0" scrolling="yes" allowTransparency="false" style="background-color:#eee;"></iframe>
+			<iframe id="mainViewFrame" src="/ppt/mainView.html" frameborder="0" scrolling="yes" allowTransparency="false" style="background-color:#eee;"></iframe>
 		</div>
 	</div>
 	<!-- 푸쉬알림 -->
