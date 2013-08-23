@@ -10,7 +10,6 @@ html, body { padding:0; margin:0; }
 <!-- wColorPicker -->
 <link rel="Stylesheet" type="text/css" href="./js/wColorPicker.css" />
 <script type="text/javascript" src="./js/wColorPicker.js"></script>
-<script src="http://203.253.20.234:8005/socket.io/socket.io.js"></script>
 
 <script>
 
@@ -24,6 +23,8 @@ $(function(){
 	var sx, sy, ex, ey;
 	var down_flag = 0;
 	var resize_flag = 0;
+	var resize_box = -1;
+
 	/*gs없애고 selList가 1일 때 gs로 draw*/
 	$("#mainCanvas").mousedown(function(e){
 		sx = e.offsetX;
@@ -39,12 +40,7 @@ $(function(){
 					var gpixel = c.gctx.getImageData(sx, sy, 1, 1);
 					if(gpixel.data[3] > 0){
 						if(c.selList[i]==1){
-							for (var j=0; j<8; j++) {
-								var cur = c.boxes[i].selectionHandles[j];
-								if(e.offsetX >= cur.x && e.offsetX <= cur.x+cur.selBoxSize && e.offsetY >= cur.y && e.offsetY <= cur.y+cur.selBoxSize ){
-									resize_flag = 1;
-								}
-							}
+							
 							break;
 						}else{
 							c.select(sx, sy, sx, sy);
@@ -55,6 +51,12 @@ $(function(){
 			}else{
 				c.selList = [];
 			}
+
+			for(var i in c.selList){
+				if(resize_box==i){
+					resize_flag = 1;
+				}
+			}
 		}else{
 			c.addShape(shapeName, sx, sy, sx, sy, 1);
 		}
@@ -62,12 +64,15 @@ $(function(){
 
 	$("#mainCanvas").mousemove(function(e){
 		if(shapeName=="select"){
+			// resize하려는 box
+			resize_box = -1;
+
 			var pixel = c.ctx.getImageData(e.offsetX, e.offsetY, 1, 1);
 			if(pixel.data[3]>0){
 				$(this).css("cursor", "move");
-
 				if(c.selList.length>0){
 					for(i in c.selList){
+
 						if(c.selList[i]==1){
 							for (var j=0; j<8; j++) {
 								var cur = c.boxes[i].selectionHandles[j];
@@ -98,6 +103,8 @@ $(function(){
 											$(this).css("cursor", "se-resize");
 											break;
 									}
+									
+									resize_box = i;
 								}
 							}
 						}
@@ -140,7 +147,7 @@ $(function(){
 		ey = e.offsetY;
 		down_flag = 0;
 		resize_flag = 0;
-		
+		console.log(3);
 
 		if(shapeName=="select"){
 			if(c.selList.length==0){
@@ -220,7 +227,6 @@ socket.on('draw', function (data) {
 	c.fColor = data.fc;
 	c.addShape(data.type, data.sx, data.sy, data.ex, data.ey, 0);
 });
-
 var shapeName = 'select';
 var c =  new canvas();
 var parentC;
