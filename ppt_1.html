@@ -55,6 +55,10 @@ function addCanvas(){
 	c.ctx = makeCanvas.get(0).getContext("2d");
 
 	canvases.push(c);
+	if(canvases.length != 1)
+	{
+		socket.emit('plusplist event',{type:null});
+	}
 }
 
 function loadCanvas(num){
@@ -92,6 +96,17 @@ socket.on('my_message', function (data) {
 	message_list.innerHTML = message_list.innerHTML + data.user_name+" :" + data.message +"<br />" ;
 	overal();
 });
+
+socket.on('plus',function (data){
+	var makeCanvas = $("<canvas id='canvas"+canvases.length+"' canvasNum='"+canvases.length+"' width='640' height='480' style='border:1px #ddd solid;width:280px;height:200px;' onclick='loadCanvas("+canvases.length+");'>This text is displayed if your browser does not support HTML5 Canvas.</canvas>");
+	makeCanvas.appendTo("#canvasView");
+
+	var c = new canvas();
+	c.ctx = makeCanvas.get(0).getContext("2d");
+
+	canvases.push(c);
+});
+
 
 function set_room(){
 	roomName = 1;
@@ -138,6 +153,7 @@ function layer_popup()
 		push = 0;
 	}
 }
+
 function pushChat()
 {
 	
@@ -152,6 +168,7 @@ function pushChat()
 		pushChange.style.visibility="hidden";
 	}
 }
+
 function colorChange()
 {
 	var color = document.getElementById("chat-button").style.background;
@@ -160,6 +177,8 @@ function colorChange()
 	else
 		document.getElementById("chat-button").style.background="red";
 }
+
+
 </script>
 
 </head>

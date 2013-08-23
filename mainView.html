@@ -43,7 +43,6 @@ $(function(){
 								var cur = c.boxes[i].selectionHandles[j];
 								if(e.offsetX >= cur.x && e.offsetX <= cur.x+cur.selBoxSize && e.offsetY >= cur.y && e.offsetY <= cur.y+cur.selBoxSize ){
 									resize_flag = 1;
-									console.log(1);
 								}
 							}
 							break;
@@ -106,7 +105,7 @@ $(function(){
 					}
 				}
 				if(resize_flag==1){
-					console.log(2);
+					
 				}
 			}else{
 				$(this).css("cursor", "Auto");
@@ -161,10 +160,12 @@ $(function(){
 			parentC.fColor = c.fColor;
 			parentC.addShape(shapeName, sx, sy, ex, ey, 0);
 			c.addShape(shapeName, sx, sy, ex, ey, 0);
-			socket.emit('paint event', {type:this.shapeName, sx:this.sx, sy:this.sy, ex:this.ex, ey:this.ey});
 			c.gs = null;
-			c.selList = [];
+			//c.selList = [];
+			
+			socket.emit('paint event', {type:shapeName, sx:sx, sy:sy, ex:ex, ey:ey, sc:c.sColor, fc:c.fColor});
 			shapeName = "select";
+			
 		}
 	});
 
@@ -211,11 +212,13 @@ $(function(){
 var socket = io.connect('http://203.253.20.234:8005');
 
 socket.on('draw', function (data) {
-	 //shapeName = data.type;
-	  console.log(1);
-	 parentC.addShape(data.type, data.sx, data.sy, data.ex, data.ey, 0);
-	 c.addShape(data.type, data.sx, data.sy, data.ex, data.ey, 0);
-	
+	parentC.sColor = data.sc;
+	parentC.fColor = data.fc;
+	parentC.addShape(data.type, data.sx, data.sy, data.ex, data.ey, 0);
+
+	c.sColor = data.sc;
+	c.fColor = data.fc;
+	c.addShape(data.type, data.sx, data.sy, data.ex, data.ey, 0);
 });
 
 var shapeName = 'select';
@@ -254,6 +257,7 @@ function loadCanvas(canvasNum){
 	c.selList = [];
 
 	timer = setInterval(function(){intervalDraw(c);}, 20);
+	
 }
 
 function clear(ctx){
