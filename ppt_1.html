@@ -14,7 +14,7 @@
 <script src="./canvas.js"></script>
 
 
-<script src="http://203.253.20.234:8005/socket.io/socket.io.js"></script>
+<script src="http://qqq.kr:8005/socket.io/socket.io.js"></script>
 
 <script>
 
@@ -85,7 +85,7 @@ var chatStory = [];
 var pop=0;
 var push=0;
 
-var socket = io.connect('http://203.253.20.234:8005');
+var socket = io.connect('http://qqq.kr:8005');
 socket.on('message', function (data) {
 	message_list.innerHTML = message_list.innerHTML + data.user_name+" :" + data.message+"<br />"  ;
 	pushChat();
@@ -321,7 +321,7 @@ function colorChange()
 					</tr>
 				</table>
 			</div>
-			<iframe id="mainViewFrame" src="/ppt/mainView.html" frameborder="0" scrolling="yes" allowTransparency="false" style="background-color:#eee;"></iframe>
+			<iframe id="mainViewFrame" src="qqq.kr/ppt/mainView.html" frameborder="0" scrolling="yes" allowTransparency="false" style="background-color:#eee;"></iframe>
 		</div>
 	</div>
 	<!-- 푸쉬알림 -->
