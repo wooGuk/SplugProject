@@ -55,6 +55,7 @@ $(function(){
 });
 
 var canvases = [];
+var nowC;
 
 function addCanvas(){
 	var makeCanvas = $("<canvas id='canvas"+canvases.length+"' canvasNum='"+canvases.length+"' width='640' height='480' style='border:1px #ddd solid;width:280px;height:200px;' onclick='loadCanvas("+canvases.length+");'>This text is displayed if your browser does not support HTML5 Canvas.</canvas>");
@@ -71,6 +72,7 @@ function addCanvas(){
 }
 
 function loadCanvas(num){
+	nowC = canvases[num];
 	mainViewFrame.loadCanvas(num);
 }
 
@@ -87,15 +89,23 @@ var pop=0;
 var push=0;
 
 var socket = io.connect('http://qqq.kr:8005');
+
+socket.tt = 1234;
+
 socket.on('message', function (data) {
 	message_list.innerHTML = message_list.innerHTML + data.user_name+" :" + data.message+"<br />"  ;
 	pushChat();
 	overal();
 });
 
+
 socket.on('my_message', function (data) {
 	message_list.innerHTML = message_list.innerHTML + data.user_name+" :" + data.message +"<br />" ;
 	overal();
+});
+
+socket.on('addBoxToParent', function (parentNum, box) {
+	canvases[parentNum].addShape(box, 0);
 });
 
 socket.on('plus',function (data){

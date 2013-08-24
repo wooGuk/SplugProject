@@ -31,9 +31,12 @@ io.sockets.on('connection', function(socket) {
 		socket.emit("my_message",data); // 나한테
 			socket.broadcast.to(this.room_name).emit("message",data); // 연결된 사람한테
 	});
-	socket.on('paint event', function(data){
-			socket.broadcast.to(this.room_name).emit("draw",data); // 연결된 사람한테
+
+	socket.on('addBox', function(parentNum, box){
+		socket.broadcast.to(this.room_name).emit("addBoxToParent", parentNum, box);
 	});
+
+
 	socket.on('plusplist event',function(data){
 			socket.broadcast.to(this.room_name).emit("plus",data); // 연결된 사람한테
 	});

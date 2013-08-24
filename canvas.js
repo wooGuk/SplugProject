@@ -1,5 +1,5 @@
+
 function canvas(){
-	this.gs = null;
 	this.boxes = [];
 	this.background = "background-color:#eee;";
 	this.ctx;
@@ -7,64 +7,21 @@ function canvas(){
 	this.fColor = "yellow";
 }
 
-function selHandle(){
-	this.x = 0;
-	this.y = 0;
-	this.selBoxSize = 6;
-}
-
 canvas.prototype = {
 	draw : function(){
+
 		for(i=0; i<this.boxes.length; i++){
+			// gs를 그려줌.
+			if($(this.gs).length && $(this.gs[i]).length){
+				this.gs[i].draw(this.ctx);
+			}
 			this.boxes[i].draw(this.ctx);
 		}
-		for(i=0; i<this.boxes.length; i++){
-			if($(this.selList).length > 0){
-				if(this.selList[i]==1){
-					this.drawSelect(this.boxes[i]);
-				}
+		
+		if($(this.selList).length && this.selList.length > 0){
+			for(i in this.selList){
+				this.gs[i].drawSelect(this.ctx);
 			}
-		}
-		if(this.gs!=null){
-			this.gs.draw(this.ctx);
-		}
-	}
-	,drawSelect : function(shape){
-
-		var selBoxSize = shape.selectionHandles[0].selBoxSize;
-		var half = selBoxSize/2;
-
-		shape.selectionHandles[0].x = shape.x-half;
-		shape.selectionHandles[0].y = shape.y-half;
-		 
-		shape.selectionHandles[1].x = shape.x+shape.w/2-half;
-		shape.selectionHandles[1].y = shape.y-half;
-		 
-		shape.selectionHandles[2].x = shape.x+shape.w-half;
-		shape.selectionHandles[2].y = shape.y-half;
-		 
-		shape.selectionHandles[3].x = shape.x-half;
-		shape.selectionHandles[3].y = shape.y+shape.h/2-half;
-		 
-		shape.selectionHandles[4].x = shape.x+shape.w-half;
-		shape.selectionHandles[4].y = shape.y+shape.h/2-half;
-		 
-		shape.selectionHandles[6].x = shape.x+shape.w/2-half;
-		shape.selectionHandles[6].y = shape.y+shape.h-half;
-		 
-		shape.selectionHandles[5].x = shape.x-half;
-		shape.selectionHandles[5].y = shape.y+shape.h-half;
-		 
-		shape.selectionHandles[7].x = shape.x+shape.w-half;
-		shape.selectionHandles[7].y = shape.y+shape.h-half;
-
-		this.ctx.fillStyle = "#ddd";
-		this.ctx.strokeStyle = "#ddd";
-		this.ctx.lineWidth = "1";
-		this.ctx.strokeRect(shape.x, shape.y, shape.w, shape.h);
-		for (var i=0; i<8; i++) {
-			var cur = shape.selectionHandles[i];
-			this.ctx.fillRect(cur.x, cur.y, selBoxSize, selBoxSize);
 		}
 	}
 	,select : function(sx, sy, ex, ey){
@@ -93,7 +50,7 @@ canvas.prototype = {
 			for(i=this.boxes.length-1; i>=0; i--){
 				clear(this.gctx);
 				this.boxes[i].draw(this.gctx);
-				var pixel = c.gctx.getImageData(maxx, maxy, 1, 1);
+				var pixel = mainC.gctx.getImageData(maxx, maxy, 1, 1);
 				if(pixel.data[3] > 0){
 					this.selList[i] = 1;
 					break;
@@ -108,31 +65,24 @@ canvas.prototype = {
 			}
 		}
 	}
-	,addShape : function(name, sx, sy, ex, ey, gs){
-		var s = new shape();
+	,addShape : function(s, gs){
 		s.fillColor = this.fColor;
-		s.strokeColor = this.sColor
+		s.strokeColor = this.sColor;
 
-		s.name = name;
-		s.sx = sx;
-		s.sy = sy;
-		s.ex = ex;
-		s.ey = ey;
-
-		if(ex>sx){
-			minx = sx;
-			maxx = ex;
+		if(s.ex>s.sx){
+			minx = s.sx;
+			maxx = s.ex;
 		}else{
-			minx = ex;
-			maxx = sx;
+			minx = s.ex;
+			maxx = s.sx;
 		}
 
-		if(ey>sy){
-			miny = sy;
-			maxy = ey;
+		if(s.ey>s.sy){
+			miny = s.sy;
+			maxy = s.ey;
 		}else{
-			miny = ey;
-			maxy = sy;
+			miny = s.ey;
+			maxy = s.sy;
 		}
 
 		s.x = minx;
@@ -141,14 +91,15 @@ canvas.prototype = {
 		s.h = maxy-miny;
 
 		if(gs==1){
-			this.gs = s;
-		}else{
+			s.alpha = 0.5;
 			for (var i = 0; i < 8; i ++) {
 				s.selectionHandles[i] = new selHandle();
 			}
+		}else{
 			this.boxes.push(s);
-			this.draw();
 		}
+
+		return s;
 	}
 	,change : function(shape){
 		shape.fillColor = this.fColor;
