@@ -106,6 +106,7 @@ socket.on('my_message', function (data) {
 
 socket.on('addBoxToParent', function (parentNum, box) {
 	canvases[parentNum].addShape(box, 0);
+	//mainViewFrame.parentC.addShape(box, 0);
 });
 
 socket.on('plus',function (data){

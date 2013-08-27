@@ -35,10 +35,12 @@ $(function(){
 	$("body").height(pHeight-30);
 
 	var sx, sy, ex, ey;
+	var tempShape=[];
 	var down_flag = 0;
 	var resize_flag = 0;
 	var resize_box = -1;
 	var resize_point = -1;
+	var control_flag = 0;
 
 	/*gs없애고 selList가 1일 때 gs로 draw*/
 	$("#mainCanvas").mousedown(function(e){
@@ -56,25 +58,44 @@ $(function(){
 					mainC.boxes[i].draw(mainC.gctx);
 					var gpixel = mainC.gctx.getImageData(sx, sy, 1, 1);
 					if(gpixel.data[3] > 0){
+						//console.log(i);
 						if(mainC.selList[i]==1){
+							if(control_flag == 1){
+								console.log(i);
+								mainC.selList.splice(i,1,null);
+								//console.log(mainC.selList);
+								//console.log(i);
+							}
+						}
+						else{
+							if(control_flag == 1){
+							//console.log("in?");
+							mainC.selList[i] = 1;
+							// console.log(mainC.selList);
 							break;
-						}else{
-							mainC.select(sx, sy, sx, sy);
-							break;
+							}
+							else
+								mainC.select(sx,sy,sx,sy);
 						}
 					}
 				}
+
 			}else{
-				// move가 아닐 때는 selList비워줌.
+				// move가 아닐 때는 selList비워줌.	
 				mainC.selList = [];
 			}
 			
 			// 선택된 도형 중에 resize하려고 할 때
 			for(var i in mainC.selList){
 				if(resize_box==i){
+					
 					resize_flag = 1;
 				}
 			}
+
+			
+
+
 		}else{
 			mainC.selList = [];
 
@@ -244,18 +265,19 @@ $(function(){
 		resize_flag = 0;
 		resize_box = -1;
 		resize_point = -1;
-		console.log(3);
 
 		if(shapeName=="select"){
 			// 여러개 선택할 경우
 			if(mainC.selList.length==0){
-				mainC.select(sx, sy, ex, ey);
+					mainC.select(sx, sy, ex, ey);
 			}
+
 			// move
-			for(i in mainC.selList){
-				copyPosition(parentC.boxes[i], mainC.gs[i]);
-				getBoxFromparent(i);
-			}
+				for(i in mainC.selList){
+					copyPosition(parentC.boxes[i], mainC.gs[i]);
+					getBoxFromparent(i);
+				}
+		
 		}else{
 			parentC.sColor = mainC.sColor;
 			parentC.fColor = mainC.fColor;
@@ -272,10 +294,175 @@ $(function(){
 
 			mainC.selList[$(mainC.boxes).length-1] = 1;
 			getBoxFromparent(-1);
+			console.log(mainC.gs.length);
 			shapeName = "select";
 		}
 	});
 
+	$(document).keydown(function(e){
+		console.log(e.keyCode);
+     	if(e.keyCode == 17)
+     	{
+     		control_flag = 1;
+     	}
+     	//위쪽 방향키
+			if(e.keyCode == 38)
+			{
+				for(i=mainC.selList.length-1; i>=0;i--){
+					if(mainC.selList[i] == 1)
+					{	
+						if(mainC.gs[i].sy != 0)
+						{
+							mainC.gs[i].sy -= 1;
+							mainC.gs[i].ey -= 1;
+							mainC.gs[i].y -= 1;
+						}
+						copyPosition(parentC.boxes[i], mainC.gs[i]);
+						getBoxFromparent(i);
+					}
+				}
+			}
+			//왼쪽 방향키
+			if(e.keyCode == 37)
+			{
+				for(i=mainC.selList.length-1; i>=0;i--){
+					if(mainC.selList[i] == 1)
+					{	
+						if(mainC.gs[i].sx != 0)
+						{
+							mainC.gs[i].sx -= 1;
+							mainC.gs[i].ex -= 1;
+							mainC.gs[i].x -= 1;
+						}
+
+						copyPosition(parentC.boxes[i], mainC.gs[i]);
+						getBoxFromparent(i);
+					}
+				}
+			}
+			//오른쪽 방향키
+			if(e.keyCode == 39)
+			{
+				for(i=mainC.selList.length-1; i>=0;i--){
+					if(mainC.selList[i] == 1)
+					{
+						if(mainC.gs[i].ex != 640)
+						{
+							mainC.gs[i].sx += 1;
+							mainC.gs[i].ex += 1;
+							mainC.gs[i].x += 1;
+						}
+						copyPosition(parentC.boxes[i], mainC.gs[i]);
+						getBoxFromparent(i);
+					}
+				}
+			}
+			//아랬쪽 방향키
+			if(e.keyCode == 40)
+			{
+				for(i=mainC.selList.length-1; i>=0;i--){
+					if(mainC.selList[i] == 1)
+					{	
+						if(mainC.gs[i].ey != 400)
+						{
+							mainC.gs[i].sy += 1;
+							mainC.gs[i].ey += 1;
+							mainC.gs[i].y += 1;
+						}
+						copyPosition(parentC.boxes[i], mainC.gs[i]);
+						getBoxFromparent(i);
+					}
+				}
+			}
+	});
+
+	//키보드 입력시 			
+		$(document).keyup(function(e){
+			if(control_flag == 1 && e.keyCode == 67)
+			{
+				tempShape = [];
+				for(i=mainC.selList.length-1; i>=0; i--)
+				{
+					if(mainC.selList[i] == 1)
+					{
+						newShape = new shape();
+						newShape.name = mainC.gs[i].name;
+						newShape.sx = mainC.gs[i].sx+5;
+						newShape.sy = mainC.gs[i].sy+5;
+						newShape.ex = mainC.gs[i].ex+5;
+						newShape.ey = mainC.gs[i].ey+5;
+						newShape.fillColor = mainC.boxes[i].fillColor;
+						newShape.strokeColor = mainC.boxes[i].strokeColor;
+						tempShape.push(newShape);
+						console.log("복사성공!");
+					}	
+				}
+			}
+
+			if(control_flag == 1 && e.keyCode == 86)
+			{
+				for(i = 0 ; i< tempShape.length ; i++)
+				{
+					console.log("hello");
+					tempSc = tempShape[i].strokeColor;;
+					tempFc = tempShape[i].fillColor;
+					tempS = mainC.addShape(tempShape[i], 0);
+					tempS = mainC.addShape(tempShape[i], 1);
+					tempS.fillColor = tempFc;
+					tempS.strokeColor = tempSc;
+					//console.log(tempShape[0].fillColor);
+					//console.log(tempShape[1].fillColor);
+					mainC.gs[mainC.boxes.length-1] = tempS;
+					
+					newShape = new shape();
+					newShape.name = tempShape[i].name;
+					newShape.sx = tempShape[i].sx;
+					newShape.sy = tempShape[i].sy;
+					newShape.ex = tempShape[i].ex;
+					newShape.ey = tempShape[i].ey;
+					newShape.strokeColor = tempSc;
+					newShape.fillColor = tempFc;
+
+					
+
+					parentC.sColor = newShape.strokeColor;
+					parentC.fColor = newShape.fillColor;
+
+					parentC.addShape(newShape,0);
+					getBoxFromparent(-1);
+					console.log("객체 복사 성공 !!!")
+				}
+
+					
+					console.log(parentC.boxes);
+					shapeName = "select";
+			}
+
+			if(control_flag == 1 && e.keyCode == 90)
+			{
+				for(i=0; i<mainC.boxes.length; i++)
+				{
+					mainC.selList[i] = 1;
+				}
+			}
+
+			control_flag = 0;
+			
+			//del키 입력시
+			if(e.keyCode == 46)
+			{	
+				for(i=mainC.selList.length-1; i>=0;i--){
+					if(mainC.selList[i] == 1)
+					{
+						parentC.boxes.splice(i,1);							
+						mainC.selList.splice(i,1);
+						mainC.gs.splice(i,1);
+						getBoxFromparent();
+						
+					}
+				}
+			}
+		});			
 	
 	$("#fillColorPicker").wColorPicker({
 		mode: "click",
@@ -319,6 +506,7 @@ var newShape;
 var mainC =  new canvas();
 var parentC;
 var timer;
+
 
 function setShape(name){
 	shapeName = name;

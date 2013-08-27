@@ -20,7 +20,8 @@ canvas.prototype = {
 		
 		if($(this.selList).length && this.selList.length > 0){
 			for(i in this.selList){
-				this.gs[i].drawSelect(this.ctx);
+				if(this.selList[i]==1)
+					this.gs[i].drawSelect(this.ctx);
 			}
 		}
 	}
@@ -56,7 +57,8 @@ canvas.prototype = {
 					break;
 				}
 			}
-		}else{
+		}
+		else{
 			for(i=this.boxes.length-1; i>=0; i--){
 				clear(this.gctx);
 				if(this.boxes[i].sx >= minx  && this.boxes[i].sx <= maxx && this.boxes[i].ex >= minx  && this.boxes[i].ex <= maxx && this.boxes[i].sy >= miny  && this.boxes[i].sy <= maxy && this.boxes[i].ey >= miny  && this.boxes[i].ey <= maxy){
