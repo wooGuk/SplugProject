@@ -1,5 +1,5 @@
 
-function canvas(){
+canvas = function(){
 	this.boxes = [];
 	this.background = "background-color:#eee;";
 	this.ctx;
@@ -12,16 +12,15 @@ canvas.prototype = {
 
 		for(i=0; i<this.boxes.length; i++){
 			// gs를 그려줌.
-			if($(this.gs).length && $(this.gs[i]).length){
+			if($(this.gs).length){
 				this.gs[i].draw(this.ctx);
 			}
 			this.boxes[i].draw(this.ctx);
 		}
 		
 		if($(this.selList).length && this.selList.length > 0){
-			for(i in this.selList){
-				if(this.selList[i]==1)
-					this.gs[i].drawSelect(this.ctx);
+			for(var i in this.selList){
+				this.gs[i].drawSelect(this.ctx);
 			}
 		}
 	}

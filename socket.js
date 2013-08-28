@@ -21,23 +21,23 @@ function handler(req, res){
 }
 
 io.sockets.on('connection', function(socket) {
-	var room_name = 1;
+	this.room_name = 1;
 
 	/*socket.on('set_room', function(data){
 		socket.join(data.room_name);
 		this.room_name = data.room_name;
 	});*/
+
 	socket.on('my other event', function(data){
-		socket.emit("my_message",data); // ³ªÇÑÅ×
-			socket.broadcast.to(this.room_name).emit("message",data); // ¿¬°áµÈ »ç¶÷ÇÑÅ×
+		socket.emit("my_message",data); //ë‚˜í•œí…Œ
+		socket.broadcast.to(this.room_name).emit("message",data); //ëª¨ë‘ì—ê²Œ
 	});
 
 	socket.on('addBox', function(parentNum, box){
 		socket.broadcast.to(this.room_name).emit("addBoxToParent", parentNum, box);
 	});
 
-
-	socket.on('plusplist event',function(data){
-			socket.broadcast.to(this.room_name).emit("plus",data); // ¿¬°áµÈ »ç¶÷ÇÑÅ×
+	socket.on('addCanvas',function(data){
+		socket.broadcast.to(this.room_name).emit("addCanvas", data);
 	});
 });

@@ -28,6 +28,13 @@ $(window).resize(function(){
 });
 
 $(function(){
+	preLoad();
+});
+
+var canvases = [];
+var nowC;
+
+function preLoad(){
 	wWidth = $(window).width();
 	wHeight = $(window).height();
 	$("#rightTab").width(wWidth-320);
@@ -35,7 +42,7 @@ $(function(){
 	$("#mainViewFrame").height(wHeight-30);
 
 	$("#mainViewFrame").load(function(){
-		if($("#canvasView").html()==""){
+		if(mainViewFrame.parentC==null){
 			addCanvas();
 			loadCanvas(0);
 		}
@@ -52,10 +59,7 @@ $(function(){
 	}).mouseleave(function(){
 		$(this).children().hide();
 	});
-});
-
-var canvases = [];
-var nowC;
+}
 
 function addCanvas(){
 	var makeCanvas = $("<canvas id='canvas"+canvases.length+"' canvasNum='"+canvases.length+"' width='640' height='480' style='border:1px #ddd solid;width:280px;height:200px;' onclick='loadCanvas("+canvases.length+");'>This text is displayed if your browser does not support HTML5 Canvas.</canvas>");
@@ -64,11 +68,12 @@ function addCanvas(){
 	var c = new canvas();
 	c.ctx = makeCanvas.get(0).getContext("2d");
 
-	canvases.push(c);
-	if(canvases.length != 1)
+	if(canvases.length != 0)
 	{
-		socket.emit('plusplist event',{type:null});
+		socket.emit('addCanvas', {num : canvases.length});
 	}
+
+	canvases[canvases.length] = c;
 }
 
 function loadCanvas(num){
@@ -79,10 +84,10 @@ function loadCanvas(num){
 </script>
 
 
+
 <script>
 /*socket*/
 
-var selc;
 var roomName = 1;
 var chatStory = [];
 var pop=0;
@@ -90,14 +95,11 @@ var push=0;
 
 var socket = io.connect('http://qqq.kr:8005');
 
-socket.tt = 1234;
-
 socket.on('message', function (data) {
 	message_list.innerHTML = message_list.innerHTML + data.user_name+" :" + data.message+"<br />"  ;
 	pushChat();
 	overal();
 });
-
 
 socket.on('my_message', function (data) {
 	message_list.innerHTML = message_list.innerHTML + data.user_name+" :" + data.message +"<br />" ;
@@ -105,18 +107,23 @@ socket.on('my_message', function (data) {
 });
 
 socket.on('addBoxToParent', function (parentNum, box) {
-	canvases[parentNum].addShape(box, 0);
-	//mainViewFrame.parentC.addShape(box, 0);
+	tempC = canvases[parentNum];
+	tempS = tempC.addShape(box, 0);
+	mainViewFrame.copyStyle(tempS, box);
 });
 
-socket.on('plus',function (data){
-	var makeCanvas = $("<canvas id='canvas"+canvases.length+"' canvasNum='"+canvases.length+"' width='640' height='480' style='border:1px #ddd solid;width:280px;height:200px;' onclick='loadCanvas("+canvases.length+");'>This text is displayed if your browser does not support HTML5 Canvas.</canvas>");
+socket.on('addCanvas',function (data){
+	if($("#canvas"+data.num).length || canvases.length!=data.num){
+		return;
+	}
+
+	var makeCanvas = $("<canvas id='canvas"+data.num+"' canvasNum='"+data.num+"' width='640' height='480' style='border:1px #ddd solid;width:280px;height:200px;' onclick='loadCanvas("+data.num+");'>This text is displayed if your browser does not support HTML5 Canvas.</canvas>");
 	makeCanvas.appendTo("#canvasView");
 
 	var c = new canvas();
 	c.ctx = makeCanvas.get(0).getContext("2d");
 
-	canvases.push(c);
+	canvases[data.num] = c;
 });
 
 
