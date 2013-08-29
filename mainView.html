@@ -454,6 +454,10 @@ function submitBox(s){
 
 <script>
 $(document).keyup(function(e){
+	if($("textarea").is(":focus")){
+		return;
+	}
+
 	switch(e.keyCode){
 		case 17 : //ctrl
 			control_flag = 0;
@@ -525,6 +529,9 @@ $(document).keyup(function(e){
 });
 
 $(document).keydown(function(e){
+	if($("textarea").is(":focus")){
+		return;
+	}
 
 	// ctrl 이용
 	switch(e.keyCode){
@@ -612,13 +619,6 @@ $(document).keydown(function(e){
 	return false;
 });
 
-$("textarea [name*='textList']").focusin(function(){
-	console.log(4);
-	return;
-	$("#tempText").css("top", $(this).top);
-	$("#tempText").show();
-});
-
 </script>
 
 <html>
@@ -637,8 +637,7 @@ $("textarea [name*='textList']").focusin(function(){
 		</div>
 	</div>
 
-	<canvas id="mainCanvas" width="640" height="480" style="background-color:#fff; zoom:1;"></canvas>
 	<div id="textDiv" style="position:absolute; top:30px; left:0px; z-index:3;"></div>
-	<textarea id="tempText" style="display:none;"></textarea>
+	<canvas id="mainCanvas" width="640" height="480" style="background-color:#fff; zoom:1;"></canvas>
 </body>
 </html>

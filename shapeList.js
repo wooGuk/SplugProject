@@ -1500,13 +1500,17 @@ var text = {
 		ctx.closePath();
 
 		var t = $("<textarea>");
-		t.attr("name", "textList[]");
 		t.css("position", "absolute");
 		t.css("top", shape.sy);
 		t.css("left", shape.sx);
 		t.css("width", shape.w);
 		t.css("height", shape.h);
 		t.text(shape.text);
+
+		t.focusout(function() {
+			shape.text = $(this).text();
+		});
+
 		$("#textDiv").append(t);
    }
 }
