@@ -13,7 +13,9 @@ canvas.prototype = {
 		for(i=0; i<this.boxes.length; i++){
 			// gs를 그려줌.
 			if($(this.gs).length){
-				this.gs[i].draw(this.ctx);
+				if(this.gs[i].name!="text"){
+					this.gs[i].draw(this.ctx);
+				}
 			}
 			this.boxes[i].draw(this.ctx);
 		}
@@ -24,7 +26,7 @@ canvas.prototype = {
 			}
 		}
 	}
-	,select : function(sx, sy, ex, ey){
+	,selectArea : function(sx, sy, ex, ey){
 //		clearInterval(timer);
 /* 여기서 for문돌면서 selList의 box의 stroke를 바꿔주거나.*/
 /* shape.draw에서 자신이 선택된 경우에 stroke를 바꿔주거나 */
@@ -52,7 +54,7 @@ canvas.prototype = {
 				this.boxes[i].draw(this.gctx);
 				var pixel = mainC.gctx.getImageData(maxx, maxy, 1, 1);
 				if(pixel.data[3] > 0){
-					this.selList[i] = 1;
+					this.select(i);
 					break;
 				}
 			}
@@ -61,10 +63,16 @@ canvas.prototype = {
 			for(i=this.boxes.length-1; i>=0; i--){
 				clear(this.gctx);
 				if(this.boxes[i].sx >= minx  && this.boxes[i].sx <= maxx && this.boxes[i].ex >= minx  && this.boxes[i].ex <= maxx && this.boxes[i].sy >= miny  && this.boxes[i].sy <= maxy && this.boxes[i].ey >= miny  && this.boxes[i].ey <= maxy){
-					this.selList[i] = 1;
+					this.select(i);
 				}
 			}
 		}
+	}
+	,select : function(i){
+		this.selList[i] = 1;
+	}
+	,unSelect : function(i){
+		delete this.selList[i];
 	}
 	,addShape : function(s, gs){
 		s.fillColor = this.fColor;

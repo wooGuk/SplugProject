@@ -44,6 +44,8 @@ $(function(){
 
 	/*gs없애고 selList가 1일 때 gs로 draw*/
 	$("#mainCanvas").mousedown(function(e){
+		timer = setInterval(function(){intervalDraw();}, 20);
+
 		sx = e.offsetX;
 		sy = e.offsetY;
 		down_flag = 1;
@@ -69,25 +71,25 @@ $(function(){
 						if(mainC.selList[i]==1){
 							// 이미 선택한 도형 위에 클릭했을 때
 							if(control_flag == 1){
-								delete mainC.selList[i];
+								mainC.unSelect(i);
 							}
 							break;
 						}else{
 							if(control_flag == 1){
-								mainC.selList[i] = 1;
+								mainC.select(i);
 							}else{
-								mainC.select(sx,sy,sx,sy);
+								mainC.selectArea(sx,sy,sx,sy);
 							}
 						}
 					}
 				}
 			}else{
 				// move가 아닐 때는 selList비워줌.	
-				mainC.selList = [];
+				clearSelList();
 			}
 
 		}else{
-			mainC.selList = [];
+			clearSelList();
 
 			newShape = new shape();
 			newShape.name = shapeName;
@@ -259,7 +261,7 @@ $(function(){
 		if(shapeName=="select"){
 			// 여러개 선택할 경우
 			if(mainC.selList.length==0){
-					mainC.select(sx, sy, ex, ey);
+					mainC.selectArea(sx, sy, ex, ey);
 			}
 
 			// move
@@ -282,10 +284,14 @@ $(function(){
 
 			parent.socket.emit("addBox", parent.socket.parentNum, box);
 
-			mainC.selList[$(mainC.boxes).length-1] = 1;
+			mainC.select($(mainC.boxes).length-1);
 			getBoxFromparent(-1);
 			shapeName = "select";
 		}
+
+		clearInterval(timer);
+		intervalDraw();
+		console.log(2);
 	});
 	
 	$("#fillColorPicker").wColorPicker({
@@ -396,9 +402,9 @@ function loadCanvas(canvasNum){
 	mainC.ctx = $("#mainCanvas").get(0).getContext("2d");
 	
 	// 선택 초기화
-	mainC.selList = [];
+	clearSelList();
 
-	timer = setInterval(function(){intervalDraw();}, 20);
+	//timer = setInterval(function(){intervalDraw();}, 20);
 }
 
 function clear(ctx){
@@ -409,8 +415,14 @@ function clearBox(canvas){
 	canvas.boxes = [];
 }
 
+function clearSelList(){
+	mainC.selList = [];
+}
+
 /* 후에 validation을 줄것인지? 의논해봅시다. 아직은 버벅거리지 않음. */
 function intervalDraw(){
+	console.log(1);
+	$("#textDiv").html("");
 	clear(mainC.ctx);
 	mainC.draw();
 	clear(parentC.ctx);
@@ -446,20 +458,11 @@ $(document).keyup(function(e){
 		case 17 : //ctrl
 			control_flag = 0;
 			break;
-	}
-});
-
-$(document).keydown(function(e){
-	// ctrl 이용
-	switch(e.keyCode){
-		case 17 : //ctrl
-			control_flag = 1;
-			break;
 		case 65 : //a
 			if(control_flag==1){
 				for(i=0; i<mainC.boxes.length; i++)
 				{
-					mainC.selList[i] = 1;
+					mainC.select(i);
 				}
 			}
 			break;
@@ -485,7 +488,7 @@ $(document).keydown(function(e){
 			break;
 		case 86 : //v
 			if(control_flag==1){
-				mainC.selList = [];
+				clearSelList();
 				for(i = 0 ; i< tempShape.length ; i++)
 				{
 					console.log("hello");
@@ -510,11 +513,23 @@ $(document).keydown(function(e){
 					parentC.fColor = newShape.fillColor;
 
 					parentC.addShape(newShape, 0);
-					mainC.selList[parentC.boxes.length-1] = 1;
+					mainC.select(parentC.boxes.length-1);
 					getBoxFromparent(-1);
 				}
 			}
 			shapeName = "select";
+			break;
+	}
+	
+	intervalDraw();
+});
+
+$(document).keydown(function(e){
+
+	// ctrl 이용
+	switch(e.keyCode){
+		case 17 : //ctrl
+			control_flag = 1;
 			break;
 	}
  	
@@ -584,8 +599,8 @@ $(document).keydown(function(e){
 			for(i=mainC.selList.length-1; i>=0;i--){
 				if(mainC.selList[i] == 1)
 				{
-					parentC.boxes.splice(i,1);							
-					mainC.selList.splice(i,1);
+					parentC.boxes.splice(i,1);
+					mainC.unSelect(i);
 					mainC.gs.splice(i,1);
 					getBoxFromparent();
 					
@@ -595,6 +610,13 @@ $(document).keydown(function(e){
 	}
 
 	return false;
+});
+
+$("textarea [name*='textList']").focusin(function(){
+	console.log(4);
+	return;
+	$("#tempText").css("top", $(this).top);
+	$("#tempText").show();
 });
 
 </script>
@@ -616,5 +638,7 @@ $(document).keydown(function(e){
 	</div>
 
 	<canvas id="mainCanvas" width="640" height="480" style="background-color:#fff; zoom:1;"></canvas>
+	<div id="textDiv" style="position:absolute; top:30px; left:0px; z-index:3;"></div>
+	<textarea id="tempText" style="display:none;"></textarea>
 </body>
 </html>

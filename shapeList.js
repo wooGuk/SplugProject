@@ -1485,8 +1485,28 @@ var cloud = {
 		ctx.closePath();
 	}
 }
+
 var text = {
 	draw : function(ctx, shape){
-	}
-}
+		ctx.beginPath();
 
+		ctx.moveTo(shape.x, shape.y);
+		ctx.lineTo(shape.x+shape.w, shape.y);
+		ctx.lineTo(shape.x+shape.w, shape.y+shape.h);
+		ctx.lineTo(shape.x, shape.y+shape.h);
+		ctx.lineTo(shape.x, shape.y);
+
+		ctx.stroke();
+		ctx.closePath();
+
+		var t = $("<textarea>");
+		t.attr("name", "textList[]");
+		t.css("position", "absolute");
+		t.css("top", shape.sy);
+		t.css("left", shape.sx);
+		t.css("width", shape.w);
+		t.css("height", shape.h);
+		t.text(shape.text);
+		$("#textDiv").append(t);
+   }
+}
