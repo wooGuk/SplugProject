@@ -43,6 +43,12 @@ $(function(){
 	var resize_point = -1;
 
 	/*gs없애고 selList가 1일 때 gs로 draw*/
+	$(document).mousemove(function(e){
+		if(down_flag==1){
+
+		}
+	});
+
 	$("#mainCanvas").mousedown(function(e){
 		timer = setInterval(function(){intervalDraw();}, 20);
 
@@ -106,57 +112,97 @@ $(function(){
 	// 0  1  2
     // 3     4
     // 5  6  7
+
+	function setPoint(c, i, point){
+		box = mainC.gs[i];
+		rBox = mainC.boxes[i];
+
+		switch(c){
+			case "x1" : 
+				if(rBox.sx==rBox.x){
+					console.log("sx");
+					box.sx = point;
+				}else{
+					console.log("ex");
+					box.ex = point;
+				}
+				break;
+			case "y1" : 
+				if(rBox.sy==rBox.y){
+					console.log("sy");
+					box.sy = point;
+				}else{
+					console.log("ey");
+					box.ey = point;
+				}
+				break;
+			case "x2" : 
+				if(rBox.sx==rBox.x){
+					console.log("ex");
+					box.ex = point;
+				}else{
+					console.log("sx");
+					box.sx = point;
+				}
+				break;
+			case "y2" : 
+				if(rBox.sy==rBox.y){
+					console.log("ey");
+					box.ey = point;
+				}else{
+					console.log("sy");
+					box.sy = point;
+				}
+				break;
+		}
+    }
 	$("#mainCanvas").mousemove(function(e){
 		if(shapeName=="select"){
-
 			if(resize_flag==1){
-				diff_sx = mainC.gs[resize_box].sx-e.offsetX;
-				diff_sy = mainC.gs[resize_box].sy-e.offsetY;
-				diff_ex = mainC.gs[resize_box].ex-e.offsetX;
-				diff_ey = mainC.gs[resize_box].ey-e.offsetY;
 				for(i in mainC.selList){
+					var t_box = mainC.gs[i];
 					switch(resize_point){
 						case 0 :
-							mainC.gs[i].sx -= diff_sx;
-							mainC.gs[i].sy -= diff_sy;
+							setPoint("x1", i, e.offsetX);
+							setPoint("y1", i, e.offsetY);
 							mainC.gs[i] = mainC.addShape(mainC.gs[i], 1);
 							copyStyle(mainC.gs[i], mainC.boxes[i]);
 							break;
 						case 1 :
-							mainC.gs[i].sy -= diff_sy;
+							setPoint("y1", i, e.offsetY);
 							mainC.gs[i] = mainC.addShape(mainC.gs[i], 1);
 							copyStyle(mainC.gs[i], mainC.boxes[i]);
 							break;
 						case 2 :
-							mainC.gs[i].ex -= diff_ex;
-							mainC.gs[i].sy -= diff_sy;
+							setPoint("x2", i, e.offsetX);
+							setPoint("y1", i, e.offsetY);
 							mainC.gs[i] = mainC.addShape(mainC.gs[i], 1);
 							copyStyle(mainC.gs[i], mainC.boxes[i]);
 							break;
 						case 3 :
-							mainC.gs[i].sx -= diff_sx;
+							setPoint("x1", i, e.offsetX);
 							mainC.gs[i] = mainC.addShape(mainC.gs[i], 1);
 							copyStyle(mainC.gs[i], mainC.boxes[i]);
 							break;
 						case 4 :
-							mainC.gs[i].ex -= diff_ex;
+							setPoint("x2", i, e.offsetX);
 							mainC.gs[i] = mainC.addShape(mainC.gs[i], 1);
 							copyStyle(mainC.gs[i], mainC.boxes[i]);
 							break;
 						case 5 :
-							mainC.gs[i].sx -= diff_sx;
-							mainC.gs[i].ey -= diff_ey;
+							setPoint("x1", i, e.offsetX);
+							setPoint("y2", i, e.offsetY);
 							mainC.gs[i] = mainC.addShape(mainC.gs[i], 1);
 							copyStyle(mainC.gs[i], mainC.boxes[i]);
 							break;
 						case 6 :
-							mainC.gs[i].ey -= diff_ey;
+							setPoint("y2", i, e.offsetY);
 							mainC.gs[i] = mainC.addShape(mainC.gs[i], 1);
 							copyStyle(mainC.gs[i], mainC.boxes[i]);
 							break;
 						case 7 :
-							mainC.gs[i].ex -= diff_ex;
-							mainC.gs[i].ey -= diff_ey;
+							setPoint("x2", i, e.offsetX);
+							setPoint("y2", i, e.offsetY);
 							mainC.gs[i] = mainC.addShape(mainC.gs[i], 1);
 							copyStyle(mainC.gs[i], mainC.boxes[i]);
 							break;
@@ -616,6 +662,7 @@ $(document).keydown(function(e){
 			break;
 	}
 
+	intervalDraw();
 	return false;
 });
 
