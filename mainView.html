@@ -1,0 +1,690 @@
+<script src="./js/jquery-2.0.2.min.js"></script>
+<script src="./shapeList.js"></script>
+<script src="./shape.js"></script>
+<script src="./canvas.js"></script>
+
+<script src="http://qqq.kr:8005/socket.io/socket.io.js"></script>
+
+<style>
+html, body { padding:0; margin:0; }
+</style>
+
+<!-- wColorPicker -->
+<link rel="Stylesheet" type="text/css" href="./js/wColorPicker.css" />
+<script type="text/javascript" src="./js/wColorPicker.js"></script>
+
+<script>
+$(window).resize(function(){
+	pWidth = $(parent.mainViewFrame).width();
+	pHeight = $(parent.mainViewFrame).height();
+
+	$("body").width(pWidth);
+	$("body").height(pHeight-30);
+
+	r = pWidth/640;
+
+	//$("#mainCanvas").css("zoom", r);
+	//$("#gcanvas").css("zoom", r);
+});
+
+$(function(){
+	parent.preLoad();
+
+	pWidth = $(parent.mainViewFrame).width();
+	pHeight = $(parent.mainViewFrame).height();
+
+	$("body").width(pWidth);
+	$("body").height(pHeight-30);
+
+	var sx, sy, ex, ey;
+	var down_flag = 0;
+	var resize_flag = 0;
+	var resize_box = -1;
+	var resize_point = -1;
+
+	/*gs없애고 selList가 1일 때 gs로 draw*/
+	$(document).mousemove(function(e){
+		if(down_flag==1){
+
+		}
+	});
+
+	$("#mainCanvas").mousedown(function(e){
+		timer = setInterval(function(){intervalDraw();}, 20);
+
+		sx = e.offsetX;
+		sy = e.offsetY;
+		down_flag = 1;
+
+		if(shapeName=="select"){
+
+			// 선택된 도형 중에 resize하려고 할 때
+			for(var i in mainC.selList){
+				if(resize_box==i){
+					resize_flag = 1;
+					return;
+				}
+			}
+
+			// move
+			var pixel = mainC.ctx.getImageData(e.offsetX, e.offsetY, 1, 1);
+			if(pixel.data[3]>0){
+				for(i=mainC.boxes.length-1; i>=0; i--){
+					clear(mainC.gctx);
+					mainC.boxes[i].draw(mainC.gctx);
+					var gpixel = mainC.gctx.getImageData(sx, sy, 1, 1);
+					if(gpixel.data[3] > 0){
+						if(mainC.selList[i]==1){
+							// 이미 선택한 도형 위에 클릭했을 때
+							if(control_flag == 1){
+								mainC.unSelect(i);
+							}
+							break;
+						}else{
+							if(control_flag == 1){
+								mainC.select(i);
+							}else{
+								mainC.selectArea(sx,sy,sx,sy);
+							}
+						}
+					}
+				}
+			}else{
+				// move가 아닐 때는 selList비워줌.	
+				clearSelList();
+			}
+
+		}else{
+			clearSelList();
+
+			newShape = new shape();
+			newShape.name = shapeName;
+			newShape.sx = sx;
+			newShape.sy = sy;
+			newShape.ex = sx;
+			newShape.ey = sy;
+			tempS = mainC.addShape(newShape, 1);
+			tempS = mainC.addShape(newShape, 0); // 사라질 임시 도형
+			mainC.gs[mainC.boxes.length-1] = tempS;
+		}
+	});
+
+	// 0  1  2
+    // 3     4
+    // 5  6  7
+
+	function setPoint(c, i, point){
+		box = mainC.gs[i];
+		rBox = mainC.boxes[i];
+
+		switch(c){
+			case "x1" : 
+				if(rBox.sx==rBox.x){
+					console.log("sx");
+					box.sx = point;
+				}else{
+					console.log("ex");
+					box.ex = point;
+				}
+				break;
+			case "y1" : 
+				if(rBox.sy==rBox.y){
+					console.log("sy");
+					box.sy = point;
+				}else{
+					console.log("ey");
+					box.ey = point;
+				}
+				break;
+			case "x2" : 
+				if(rBox.sx==rBox.x){
+					console.log("ex");
+					box.ex = point;
+				}else{
+					console.log("sx");
+					box.sx = point;
+				}
+				break;
+			case "y2" : 
+				if(rBox.sy==rBox.y){
+					console.log("ey");
+					box.ey = point;
+				}else{
+					console.log("sy");
+					box.sy = point;
+				}
+				break;
+		}
+    }
+	$("#mainCanvas").mousemove(function(e){
+		if(shapeName=="select"){
+			if(resize_flag==1){
+				for(i in mainC.selList){
+					var t_box = mainC.gs[i];
+					switch(resize_point){
+						case 0 :
+							setPoint("x1", i, e.offsetX);
+							setPoint("y1", i, e.offsetY);
+							mainC.gs[i] = mainC.addShape(mainC.gs[i], 1);
+							copyStyle(mainC.gs[i], mainC.boxes[i]);
+							break;
+						case 1 :
+							setPoint("y1", i, e.offsetY);
+							mainC.gs[i] = mainC.addShape(mainC.gs[i], 1);
+							copyStyle(mainC.gs[i], mainC.boxes[i]);
+							break;
+						case 2 :
+							setPoint("x2", i, e.offsetX);
+							setPoint("y1", i, e.offsetY);
+							mainC.gs[i] = mainC.addShape(mainC.gs[i], 1);
+							copyStyle(mainC.gs[i], mainC.boxes[i]);
+							break;
+						case 3 :
+							setPoint("x1", i, e.offsetX);
+							mainC.gs[i] = mainC.addShape(mainC.gs[i], 1);
+							copyStyle(mainC.gs[i], mainC.boxes[i]);
+							break;
+						case 4 :
+							setPoint("x2", i, e.offsetX);
+							mainC.gs[i] = mainC.addShape(mainC.gs[i], 1);
+							copyStyle(mainC.gs[i], mainC.boxes[i]);
+							break;
+						case 5 :
+							setPoint("x1", i, e.offsetX);
+							setPoint("y2", i, e.offsetY);
+							mainC.gs[i] = mainC.addShape(mainC.gs[i], 1);
+							copyStyle(mainC.gs[i], mainC.boxes[i]);
+							break;
+						case 6 :
+							setPoint("y2", i, e.offsetY);
+							mainC.gs[i] = mainC.addShape(mainC.gs[i], 1);
+							copyStyle(mainC.gs[i], mainC.boxes[i]);
+							break;
+						case 7 :
+							setPoint("x2", i, e.offsetX);
+							setPoint("y2", i, e.offsetY);
+							mainC.gs[i] = mainC.addShape(mainC.gs[i], 1);
+							copyStyle(mainC.gs[i], mainC.boxes[i]);
+							break;
+					}
+				}
+			}
+
+			var pixel = mainC.ctx.getImageData(e.offsetX, e.offsetY, 1, 1);
+			if(pixel.data[3]>0){
+				if(resize_flag==0){
+					$(this).css("cursor", "move");
+					resize_box = -1;
+				}
+				if(mainC.selList.length>0){
+					for(i in mainC.selList){
+
+						// 마우스 커서 변경
+						if(mainC.selList[i]==1 && resize_flag==0){
+							for (var j=0; j<8; j++) {
+								var cur = mainC.gs[i].selectionHandles[j];
+								if(e.offsetX >= cur.x && e.offsetX <= cur.x+cur.selBoxSize && e.offsetY >= cur.y && e.offsetY <= cur.y+cur.selBoxSize ){
+									switch(j){
+										case 0 :
+											$(this).css("cursor", "nw-resize");
+											break;
+										case 1 :
+											$(this).css("cursor", "n-resize");
+											break;
+										case 2 :
+											$(this).css("cursor", "ne-resize");
+											break;
+										case 3 :
+											$(this).css("cursor", "w-resize");
+											break;
+										case 4 :
+											$(this).css("cursor", "e-resize");
+											break;
+										case 5 :
+											$(this).css("cursor", "sw-resize");
+											break;
+										case 6 :
+											$(this).css("cursor", "s-resize");
+											break;
+										case 7 :
+											$(this).css("cursor", "se-resize");
+											break;
+									}
+									
+									resize_point = j;
+									resize_box = i;
+								}
+							}
+						}
+
+					}
+				}
+				
+			}else{
+				$(this).css("cursor", "Auto");
+			}
+
+			if(down_flag==1&&resize_flag==0){
+				if(mainC.selList.length>0){
+					diffX = sx-e.offsetX;
+					diffY = sy-e.offsetY;
+					sx = e.offsetX;
+					sy = e.offsetY;
+					for(i in mainC.selList){
+						mainC.gs[i].sx -= diffX;
+						mainC.gs[i].ex -= diffX;
+						mainC.gs[i].sy -= diffY;
+						mainC.gs[i].ey -= diffY;
+						mainC.gs[i].x -= diffX;
+						mainC.gs[i].y -= diffY;
+					}
+				}
+			}
+			
+		}else{
+			$(this).css("cursor", "crosshair");
+			if(down_flag==1){
+				newShape = new shape();
+				newShape.name = shapeName;
+				newShape.sx = sx;
+				newShape.sy = sy;
+				newShape.ex = e.offsetX;
+				newShape.ey = e.offsetY;
+				tempS = mainC.addShape(newShape, 1);
+				mainC.gs[mainC.boxes.length-1] = tempS;
+			}
+		}
+	});
+
+	$("#mainCanvas").mouseup(function(e){
+		ex = e.offsetX;
+		ey = e.offsetY;
+		down_flag = 0;
+		resize_flag = 0;
+		resize_box = -1;
+		resize_point = -1;
+
+		if(shapeName=="select"){
+			// 여러개 선택할 경우
+			if(mainC.selList.length==0){
+					mainC.selectArea(sx, sy, ex, ey);
+			}
+
+			// move
+			for(i in mainC.selList){
+				copyPosition(parentC.boxes[i], mainC.gs[i]);
+				getBoxFromparent(i);
+			}
+		
+		}else{
+			parentC.sColor = mainC.sColor;
+			parentC.fColor = mainC.fColor;
+
+			newShape = new shape();
+			newShape.name = shapeName;
+			newShape.sx = sx;
+			newShape.sy = sy;
+			newShape.ex = ex;
+			newShape.ey = ey;
+			box = parentC.addShape(newShape, 0);
+
+			parent.socket.emit("addBox", parent.socket.parentNum, box);
+
+			mainC.select($(mainC.boxes).length-1);
+			getBoxFromparent(-1);
+			shapeName = "select";
+		}
+
+		clearInterval(timer);
+		intervalDraw();
+		console.log(2);
+	});
+	
+	$("#fillColorPicker").wColorPicker({
+		mode: "click",
+		initColor: "#CCFF00",
+		buttonSize: 10,
+		showSpeed: 300,
+		hideSpeed: 300,
+		onSelect: function(selectColor){
+			mainC.fColor = selectColor;
+			if($(mainC.selList).length > 0){
+				for(var i in mainC.selList){
+					parentC.setFillColor(i, selectColor);
+					mainC.gs[i].fillColor = selectColor;
+					getBoxFromparent(i);
+				}
+			}
+		}
+	});
+
+	$("#strokeColorPicker").wColorPicker({
+		mode: "click",
+		initColor: "#660066",
+		buttonSize: 10,
+		showSpeed: 300,
+		hideSpeed: 300,
+		onSelect: function(selectColor){
+			mainC.sColor = selectColor;
+			if($(mainC.selList).length > 0){
+				for(var i in mainC.selList){
+					parentC.setStrokeColor(i, selectColor);
+					mainC.gs[i].strokeColor = selectColor;
+					getBoxFromparent(i);
+				}
+			}
+		}
+	});
+});
+
+var shapeName = "select";
+var newShape;
+var mainC =  new canvas();
+var parentC = null;
+var control_flag = 0;
+var tempShape=[];
+var timer;
+
+
+function setShape(name){
+	shapeName = name;
+}
+
+function copyPosition(a, b){
+	a.x = b.x;
+	a.y = b.y;
+	a.w = b.w;
+	a.h = b.h;
+	a.sx = b.sx;
+	a.sy = b.sy;
+	a.ex = b.ex;
+	a.ey = b.ey;
+}
+
+function copyStyle(a, b){
+	a.fillColor = b.fillColor;
+	a.strokeColor = b.strokeColor;
+	a.lineWidth = b.lineWidth;
+	a.lineCap = b.lineCap;
+	a.text = b.text;
+}
+
+function getBoxFromparent(i){
+	if(i > -1){
+		mainC.boxes[i] = parentC.boxes[i];
+		return;
+	}
+
+	clearBox(mainC);
+	mainC.gs = [];
+	for(i=0; i<parentC.boxes.length; i++){
+		mainC.boxes[i] = parentC.boxes[i];
+
+		newShape = new shape();
+		newShape.name = parentC.boxes[i].name;
+		copyPosition(newShape, parentC.boxes[i]);
+		tempS = mainC.addShape(newShape, 1);
+		copyStyle(tempS, parentC.boxes[i]);
+		
+		mainC.gs[i] = tempS;
+	}
+}
+
+function loadCanvas(canvasNum){
+	// 부모에서 도형리스트 복사
+	parent.socket.parentNum = canvasNum;
+	parentC = parent.canvases[canvasNum];
+	getBoxFromparent(-1);
+
+	// 고스트 캔버스 선택
+	var position = $("#mainCanvas").position();
+	var gCanvas = $("<canvas id='gcanvas' width='640' height='480' style='position:absolute; z-index:-1;');'>This text is displayed if your browser does not support HTML5 Canvas.</canvas>");
+	gCanvas.css("top", position.top);
+	gCanvas.css("left", position.left);
+	gCanvas.insertAfter("#mainCanvas");
+	mainC.gctx = gCanvas.get(0).getContext("2d");
+
+	// 캔버스 선택
+	mainC.ctx = $("#mainCanvas").get(0).getContext("2d");
+	
+	// 선택 초기화
+	clearSelList();
+
+	//timer = setInterval(function(){intervalDraw();}, 20);
+}
+
+function clear(ctx){
+	ctx.clearRect(0,0,640,480);
+}
+
+function clearBox(canvas){
+	canvas.boxes = [];
+}
+
+function clearSelList(){
+	mainC.selList = [];
+}
+
+/* 후에 validation을 줄것인지? 의논해봅시다. 아직은 버벅거리지 않음. */
+function intervalDraw(){
+	console.log(1);
+	$("#textDiv").html("");
+	clear(mainC.ctx);
+	mainC.draw();
+	clear(parentC.ctx);
+	parentC.draw();
+}
+
+
+function submitBox(s){
+	var box = {
+		name : s.name
+		,x : s.x
+		,y : s.y
+		,sx : s.sx
+		,sy : s.sy
+		,ex : s.ex
+		,ey : s.ey
+		,alpha : s.alpha
+		,fillColor : s.fillColor
+		,strokeColor : s.strokeColor
+		,lineWidth : s.lineWidth
+		,lineCap : s.lineCap
+		,text : s.text
+	}
+	return box;
+}
+</script>
+
+
+
+<script>
+$(document).keyup(function(e){
+	if($("textarea").is(":focus")){
+		return;
+	}
+
+	switch(e.keyCode){
+		case 17 : //ctrl
+			control_flag = 0;
+			break;
+		case 65 : //a
+			if(control_flag==1){
+				for(i=0; i<mainC.boxes.length; i++)
+				{
+					mainC.select(i);
+				}
+			}
+			break;
+		case 67 : //c
+			if(control_flag==1){
+				tempShape = [];
+				for(i=mainC.selList.length-1; i>=0; i--)
+				{
+					if(mainC.selList[i] == 1)
+					{
+						newShape = new shape();
+						newShape.name = mainC.gs[i].name;
+						newShape.sx = mainC.gs[i].sx+5;
+						newShape.sy = mainC.gs[i].sy+5;
+						newShape.ex = mainC.gs[i].ex+5;
+						newShape.ey = mainC.gs[i].ey+5;
+						newShape.fillColor = mainC.boxes[i].fillColor;
+						newShape.strokeColor = mainC.boxes[i].strokeColor;
+						tempShape.push(newShape);
+					}	
+				}
+			}
+			break;
+		case 86 : //v
+			if(control_flag==1){
+				clearSelList();
+				for(i = 0 ; i< tempShape.length ; i++)
+				{
+					console.log("hello");
+					tempSc = tempShape[i].strokeColor;
+					tempFc = tempShape[i].fillColor;
+					tempS = mainC.addShape(tempShape[i], 0);
+					tempS = mainC.addShape(tempShape[i], 1);
+					tempS.fillColor = tempFc;
+					tempS.strokeColor = tempSc;
+					mainC.gs[mainC.boxes.length-1] = tempS;
+					
+					newShape = new shape();
+					newShape.name = tempShape[i].name;
+					newShape.sx = tempShape[i].sx;
+					newShape.sy = tempShape[i].sy;
+					newShape.ex = tempShape[i].ex;
+					newShape.ey = tempShape[i].ey;
+					newShape.strokeColor = tempSc;
+					newShape.fillColor = tempFc;
+
+					parentC.sColor = newShape.strokeColor;
+					parentC.fColor = newShape.fillColor;
+
+					parentC.addShape(newShape, 0);
+					mainC.select(parentC.boxes.length-1);
+					getBoxFromparent(-1);
+				}
+			}
+			shapeName = "select";
+			break;
+	}
+	
+	intervalDraw();
+});
+
+$(document).keydown(function(e){
+	if($("textarea").is(":focus")){
+		return;
+	}
+
+	// ctrl 이용
+	switch(e.keyCode){
+		case 17 : //ctrl
+			control_flag = 1;
+			break;
+	}
+ 	
+ 	switch(e.keyCode){
+ 		case 37 : // ←
+ 			for(i=mainC.selList.length-1; i>=0;i--){
+				if(mainC.selList[i] == 1)
+				{	
+					if(mainC.gs[i].sx != 0)
+					{
+						mainC.gs[i].sx -= 1;
+						mainC.gs[i].ex -= 1;
+						mainC.gs[i].x -= 1;
+					}
+
+					copyPosition(parentC.boxes[i], mainC.gs[i]);
+					getBoxFromparent(i);
+				}
+			}
+			break;
+		case 38 : // ↑
+			for(i=mainC.selList.length-1; i>=0;i--){
+				if(mainC.selList[i] == 1)
+				{	
+					if(mainC.gs[i].sy != 0)
+					{
+						mainC.gs[i].sy -= 1;
+						mainC.gs[i].ey -= 1;
+						mainC.gs[i].y -= 1;
+					}
+					copyPosition(parentC.boxes[i], mainC.gs[i]);
+					getBoxFromparent(i);
+				}
+			}
+			break;
+		case 39 : // →
+			for(i=mainC.selList.length-1; i>=0;i--){
+				if(mainC.selList[i] == 1)
+				{
+					if(mainC.gs[i].ex != 640)
+					{
+						mainC.gs[i].sx += 1;
+						mainC.gs[i].ex += 1;
+						mainC.gs[i].x += 1;
+					}
+					copyPosition(parentC.boxes[i], mainC.gs[i]);
+					getBoxFromparent(i);
+				}
+			}
+			break;
+		case 40 : // ↓
+			for(i=mainC.selList.length-1; i>=0;i--){
+				if(mainC.selList[i] == 1)
+				{	
+					if(mainC.gs[i].ey != 400)
+					{
+						mainC.gs[i].sy += 1;
+						mainC.gs[i].ey += 1;
+						mainC.gs[i].y += 1;
+					}
+					copyPosition(parentC.boxes[i], mainC.gs[i]);
+					getBoxFromparent(i);
+				}
+			}
+			break;
+		case 46 : // del
+			for(i=mainC.selList.length-1; i>=0;i--){
+				if(mainC.selList[i] == 1)
+				{
+					parentC.boxes.splice(i,1);
+					mainC.unSelect(i);
+					mainC.gs.splice(i,1);
+					getBoxFromparent();
+					
+				}
+			}
+			break;
+	}
+
+	intervalDraw();
+	return false;
+});
+
+</script>
+
+<html>
+<body>
+	<div id="btnGroup" style="min-width:700px;height:30px;background-color:pink;">
+		<input type="button" value="선택" onclick="setShape('select');">
+		브러쉬 두께<input type="text" id="brush_size" value="1" style="width:50px;">
+		투명도 0~1<input type="text" id="opacity" value="1" style="width:50px;">
+		<input type="button" value="선" onclick="setShape('line');">
+		<input type="button" value="네모" onclick="setShape('rect');">
+		<input type="button" value="원" onclick="setShape('circle');">
+		<input type="button" value="텍스트" onclick="setShape('text');">
+		<div style="display:inline;">
+			선색<div id="strokeColorPicker" style="display:inline;"></div>
+			배경색<div id="fillColorPicker" style="display:inline;"></div>
+		</div>
+	</div>
+
+	<div id="textDiv" style="position:absolute; top:30px; left:0px; z-index:3;"></div>
+	<canvas id="mainCanvas" width="640" height="480" style="background-color:#fff; zoom:1;"></canvas>
+</body>
+</html>
