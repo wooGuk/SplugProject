@@ -1,0 +1,432 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>ppt_1</title>
+<style type="text/css">
+	html { height:100%; margin:0; padding:0; }
+	body { height:100%; margin:0; padding:0; }
+</style>
+<link rel="Stylesheet" type="text/css" href="./bubble.css">
+<link href="css/bootstrap.min.css" type="text/css" rel="stylesheet"/>
+<link href="css/bootstrap-responsive.min.css" type="text/css" rel="stylesheet"/>
+<link href="assets/css/bootstrap.css" rel="stylesheet">
+  <style type="text/css">
+      body {
+        padding-top: 60px;
+        padding-bottom: 40px;
+      }
+      .sidebar-nav {
+        padding: 9px 0;
+      }
+
+      @media (max-width: 980px) {
+        /* Enable use of floated navbar text */
+        .navbar-text.pull-right {
+          float: none;
+          padding-left: 5px;
+          padding-right: 5px;
+        }
+      }
+    </style>
+<link href="assets/css/bootstrap-responsive.css" rel="stylesheet">
+<link rel="apple-touch-icon-precomposed" sizes="144x144" href="assets/ico/apple-touch-icon-144-precomposed.png">
+<link rel="apple-touch-icon-precomposed" sizes="114x114" href="assets/ico/apple-touch-icon-114-precomposed.png">
+<link rel="apple-touch-icon-precomposed" sizes="72x72" href="assets/ico/apple-touch-icon-72-precomposed.png">
+<link rel="apple-touch-icon-precomposed" href="assets/ico/apple-touch-icon-57-precomposed.png">
+<link rel="shortcut icon" href="assets/ico/favicon.png">
+<script src="./js/jquery-2.0.2.min.js"></script>
+<script src="./shapeList.js"></script>
+<script src="./shape.js"></script>
+<script src="./canvas.js"></script>
+
+
+
+
+<script src="http://qqq.kr:8005/socket.io/socket.io.js"></script>
+
+<script>
+
+
+$(window).resize(function(){
+	wWidth = $(window).width();
+	wHeight = $(window).height();
+	$("#rightTab").width(wWidth-320);
+	$("#mainViewFrame").width(wWidth-320);
+	$("#mainViewFrame").height(wHeight-30);
+});
+
+$(function(){
+	preLoad();
+});
+
+var canvases = [];
+var nowC;
+
+function preLoad(){
+	wWidth = $(window).width();
+	wHeight = $(window).height();
+	$("#rightTab").width(wWidth-320);
+	$("#mainViewFrame").width(wWidth-320);
+	$("#mainViewFrame").height(wHeight-30);
+
+	$("#mainViewFrame").load(function(){
+		if(mainViewFrame.parentC==null){
+			addCanvas();
+			loadCanvas(0);
+		}
+	});
+
+	$("#call_list").click(function(){
+		$("#listlist").show();
+	}).mouseleave(function(){
+		$("#listlist").hide();
+	});
+
+	$(".shapeGroup").click(function(){
+		$(this).children().show();
+	}).mouseleave(function(){
+		$(this).children().hide();
+	});
+}
+
+function addCanvas(){
+	var makeCanvas = $("<canvas id='canvas"+canvases.length+"' canvasNum='"+canvases.length+"' width='640' height='480' style='border:1px #ddd solid;width:280px;height:200px;' onclick='loadCanvas("+canvases.length+");'>This text is displayed if your browser does not support HTML5 Canvas.</canvas>");
+	makeCanvas.appendTo("#canvasView");
+
+	var c = new canvas();
+	c.ctx = makeCanvas.get(0).getContext("2d");
+
+	if(canvases.length != 0)
+	{
+		socket.emit('addCanvas', {num : canvases.length});
+	}
+
+	canvases[canvases.length] = c;
+}
+
+function loadCanvas(num){
+	nowC = canvases[num];
+	mainViewFrame.loadCanvas(num);
+}
+
+</script>
+
+
+
+<script>
+/*socket*/
+
+var roomName = 1;
+var chatStory = [];
+var pop=0;
+var push=0;
+
+var socket = io.connect('http://qqq.kr:8005');
+
+socket.on('message', function (data) {
+	message_list.innerHTML = message_list.innerHTML + data.user_name+" :" + data.message+"<br />"  ;
+	pushChat();
+	overal();
+});
+
+socket.on('my_message', function (data) {
+	message_list.innerHTML = message_list.innerHTML + data.user_name+" :" + data.message +"<br />" ;
+	overal();
+});
+
+socket.on('addBoxToParent', function (parentNum, box) {
+	tempC = canvases[parentNum];
+	tempS = tempC.addShape(box, 0);
+	mainViewFrame.copyStyle(tempS, box);
+});
+
+socket.on('addCanvas',function (data){
+	if($("#canvas"+data.num).length || canvases.length!=data.num){
+		return;
+	}
+
+	var makeCanvas = $("<canvas id='canvas"+data.num+"' canvasNum='"+data.num+"' width='640' height='480' style='border:1px #ddd solid;width:280px;height:200px;' onclick='loadCanvas("+data.num+");'>This text is displayed if your browser does not support HTML5 Canvas.</canvas>");
+	makeCanvas.appendTo("#canvasView");
+
+	var c = new canvas();
+	c.ctx = makeCanvas.get(0).getContext("2d");
+
+	canvases[data.num] = c;
+});
+
+
+function set_room(){
+	roomName = 1;
+	socket.emit('set_room', {room_name:1});
+}
+
+function send() {
+	/*if(user_name.value==""){
+		alert("이름을 입력하세요.");
+		return;
+	}
+	if(roomName==""){
+		alert("방을 선택하세요.");
+		return;
+	}*/
+	// send는 message만 가능. emit으로 사용자지정 가능.
+	//user_name.value="me";
+
+	socket.emit('my other event', {user_name:"you", message:input.value});
+	chatStory += "you : " + input.value +"\n";
+	//overal();
+	input.value = "";
+}
+
+function overal()
+{
+	$("#message_list").scrollTop($("#message_list")[0].scrollHeight+20);
+}
+
+function layer_popup()
+{
+	if(pop == 0){
+		var layer = document.getElementById("chat");
+		colorChange();
+		layer.style.visibility="visible";
+		pop = 1;
+		pushChat();
+	}
+	else{
+		var layer = document.getElementById("chat");
+		colorChange();
+		layer.style.visibility="hidden";
+		pop = 0;
+		push = 0;
+	}
+}
+
+function pushChat()
+{
+	
+	if(pop == 0 && this.push == 0){
+		var pushChange = document.getElementById("pushpush");
+		pushChange.style.visibility="visible";
+		this.push = 1;
+	}
+	else
+	{
+		var pushChange = document.getElementById("pushpush");
+		pushChange.style.visibility="hidden";
+	}
+}
+
+function colorChange()
+{
+	var color = document.getElementById("chat-button").style.background;
+	if(color == "red")
+		document.getElementById("chat-button").style.background="";
+	else
+		document.getElementById("chat-button").style.background="red";
+}
+
+
+</script>
+
+</head>
+<body>
+	<div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container-fluid">
+          <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="brand" href="#">Project name</a>
+          <div class="nav-collapse collapse">
+            <p class="navbar-text pull-right">
+              Logged in as <a href="#" class="navbar-link">Username</a>
+            </p>
+            <ul class="nav">
+              <li class="active"><a href="#">Home</a></li>
+              <li><a href="#about">About</a></li>
+              <li><a href="#contact">Contact</a></li>
+            </ul>
+          </div><!--/.nav-collapse -->
+        </div>
+      </div>
+    </div>
+
+	<div style="width:100%;height:100%;overflow:hidden;">
+		<div id="leftTab" style="width:320px;height:100%;float:left; background-color:#F0FFFF;overflow-y:scroll;">
+			<div style="height:30px; background-color:#E0FFFF;">
+				<ul class="nav nav-pills pull-center">
+				<li class="nav-header" style="font-weight:bold; color:#1E90FF;">프레젠테이션 리스트</li></ul></div>
+			<div id="canvasView" style="text-align:center; padding:7px;"></div>
+			<div style="text-align:center; padding:7px; border:1px #ddd solid; width:280px; height:200px;" onclick="addCanvas();">+</div>
+		</div>
+		<div id="rightTab" style="height:100%;float:left;">
+
+			<div id="call_list" style="background: url(img/0.png) no-repeat center; background-size:80%; width:100px; height:30px;">
+				<table id="listlist" style="border:1px solid #ddd; position:absolute; top:30px; left:400px; display:none;">
+					<tr>
+						<td class="shapeGroup" style="background: url(img/basicShape.png) no-repeat center; background-size:100%; width:30px; height:30px;">
+							<table style="border:10px solid #ddd;position:absolute; top:30px; left:0px; display:none; width:400px; background-color:#fff;">
+								<tr>
+									<td style="border-bottom:2px solid #ddd; width:2000px;" colspan="5">사각형</td>
+								</tr>
+								<tr>
+									<td id="rectangle" onclick="mainViewFrame.setShape('rect');" width="70">네모 </td>
+									<td id="roundrectangle" onclick="mainViewFrame.setShape('roundRect');"  width="250">모서리가둥근네모 </td>
+									<td id="five" onclick="mainViewFrame.setShape('oneCuttedRect');"  width="250">한쪽이 잘린 네모 </td>
+									<td id="six" onclick="mainViewFrame.setShape('bonthCuttedRect'); "  width="250">양쪽이 잘린 네모 </td>
+									<td id="seven" onclick="mainViewFrame.setShape('counterCuttedRect');"  width="250">대각선 잘린 네모 </td>
+								</tr>
+								<tr>
+									<td id="eight" onclick="mainViewFrame.setShape('cuttedRoundRect');" width="100">잘리고둥근네모 </td>
+									<td id="ten" onclick="mainViewFrame.setShape('oneRoundRect');" width="100">한쪽이둥근네모 </td>
+									<td id="tewelve" onclick="mainViewFrame.setShape('twoRoundRect');" width="100">양쪽이둥근네모 </td>
+									<td id="circle" onclick="mainViewFrame.setShape('counterRoundRect');" width="100">대각선이등근네모 </td>
+									<td></td>
+								</tr>
+								<tr>
+									<td style="border-bottom:2px solid #ddd; width:2000px;" colspan="5">기본도형</td>
+								</tr>
+								<tr>
+									<td id="reverseTriangle" onclick="mainViewFrame.setShape('triangle');" width="100">삼각형 </td>
+									<td id="rightAngelTriangle" onclick="mainViewFrame.setShape('reverseTriangle');" width="100">거꾸로삼각형 </td>
+									<td id="diamond" onclick="mainViewFrame.setShape('rightAngelTriangle');" width="100">오른쪽직각삼각형 </td>
+									<td id="trapezoid" onclick="mainViewFrame.setShape('trapezoid');" width="100">사다리꼴 </td>
+									<td id="trapezoid" onclick="mainViewFrame.setShape('diamond');" width="100">마름모 </td>
+								</tr>
+								<tr>
+									<td id="reverseTriangle" onclick="mainViewFrame.setShape('five');" width="100">오각형 </td>
+									<td id="rightAngelTriangle" onclick="mainViewFrame.setShape('six');" width="100">육각형 </td>
+									<td id="diamond" onclick="mainViewFrame.setShape('seven');" width="100">칠각형 </td>
+									<td id="trapezoid" onclick="mainViewFrame.setShape('eight');" width="100">팔각형 </td>
+									<td id="trapezoid" onclick="mainViewFrame.setShape('ten');" width="100">십각형 </td>
+								</tr>
+								<tr>
+									<td id="reverseTriangle" onclick="mainViewFrame.setShape('tewelve');" width="100">십이각형 </td>
+									<td id="reverseTriangle" onclick="mainViewFrame.setShape('circle');" width="100">원 </td>
+								</tr>
+							</table>
+						</td>
+						<td class="shapeGroup" style="background: url(img/arrow.png) no-repeat center; background-size:100%; width:30px; height:30px;">
+							<table style="border:10px solid #ddd;position:absolute; top:30px; left:0px; display:none; width:400px; background-color:#fff;">
+								<tr>
+									<td id="rectangle" onclick="mainViewFrame.setShape('leftArrorw');" width="70">왼쪽화살표 </td>
+									<td id="roundrectangle" onclick="mainViewFrame.setShape('rightArrorw');"  width="250">오른쪽화살표 </td>
+									<td	id="five" onclick="mainViewFrame.setShape('upArrorw');"  width="250">위쪽화살표 </td>
+									<td id="six" onclick="mainViewFrame.setShape('downArrorw'); "  width="250">아래화살표 </td>
+									<td id="seven" onclick="mainViewFrame.setShape('bothSideArrorw');"  width="250">양쪽화살표 </td>
+								</tr>
+								<tr>
+									<td id="eight" onclick="mainViewFrame.setShape('upDownArrorw');" width="100">위아래화살표 </td>
+									<td id="ten" onclick="mainViewFrame.setShape('fourArrorw');" width="100">네방향화살표 </td>
+									<td id="tewelve" onclick="mainViewFrame.setShape('threewayArrorw');" width="100">세방향화살표 </td>
+									<td id="circle" onclick="mainViewFrame.setShape('rightCurveArrorw');" width="100">오른쪽곡선 </td>
+									<td id="circle" onclick="mainViewFrame.setShape('uturnCurveArrorw');" width="100">유턴곡선 </td>
+								</tr>
+								<tr>
+									<td id="reverseTriangle" onclick="mainViewFrame.setShape('leftUpArrorw');" width="100">왼쪽업 </td>
+									<td id="rightAngelTriangle" onclick="mainViewFrame.setShape('UpforwordArrorw');" width="100">위쪽으로향하는 </td>
+									<td id="diamond" onclick="mainViewFrame.setShape('rightBendArrorw');" width="100">오른쪽구부러진 </td>
+									<td id="trapezoid" onclick="mainViewFrame.setShape('leftBendArrorw');" width="100">왼쪽구부러진 </td>
+									<td id="trapezoid" onclick="mainViewFrame.setShape('explainRightArrorw');" width="100">오른쪽설명선 </td>
+								</tr>
+								<tr>
+									<td id="reverseTriangle" onclick="mainViewFrame.setShape('explainRightLeftArrorw');" width="100">왼쪽설명선 </td>
+									<td id="rightAngelTriangle" onclick="mainViewFrame.setShape('explainRightLeftUpDownArrorw');" width="100">네방향설명선 </td>
+									<td></td>
+									<td></td>
+									<td></td>
+								</tr>
+							</table>
+						</td>
+						<td class="shapeGroup" style="background: url(img/flow.png) no-repeat center; background-size:100%; width:30px; height:30px;">
+							<table style="border:10px solid #ddd;position:absolute; top:30px; left:0px; display:none; width:400px; background-color:#fff;">
+								<tr>
+									<td id="rectangle" onclick="mainViewFrame.setShape('flowChartBasic');" width="70">기본형 </td>
+									<td id="roundrectangle" onclick="mainViewFrame.setShape('bothFlowChart');"  width="250">양쪽 </td>
+									<td	id="five" onclick="mainViewFrame.setShape('flowChartInnerSavaSpace');"  width="250">저장공간 </td>
+									<td id="six" onclick="mainViewFrame.setShape('downArrorw'); "  width="250">아래화살표 </td>
+									<td id="seven" onclick="mainViewFrame.setShape('bothSideArrorw');"  width="250">양쪽화살표 </td>
+								</tr>
+								<tr>
+									<td id="img/eight" onclick="mainViewFrame.setShape('upDownArrorw');" width="100">위아래화살표 </td>
+									<td id="ten" onclick="mainViewFrame.setShape('fourArrorw');" width="100">네방향화살표 </td>
+									<td id="tewelve" onclick="mainViewFrame.setShape('threewayArrorw');" width="100">세방향화살표 </td>
+									<td id="circle" onclick="mainViewFrame.setShape('flowChartFinal');" width="100">최종 </td>
+									<td id="circle" onclick="mainViewFrame.setShape('flowChartReady');" width="100">준비 </td>
+								</tr>
+								<tr>
+									<td id="reverseTriangle" onclick="mainViewFrame.setShape('flowChartHandWork');" width="100">수작업1 </td>
+									<td id="rightAngelTriangle" onclick="mainViewFrame.setShape('flowChartHandWork2');" width="100">수작업2 </td>
+									<td id="diamond" onclick="mainViewFrame.setShape('flowChartCard');" width="100">차트카드 </td>
+									<td id="trapezoid" onclick="mainViewFrame.setShape('flowChartTotal');" width="100">총합 </td>
+									<td id="trapezoid" onclick="mainViewFrame.setShape('flowChartOr');" width="100">또는 </td>
+								</tr>
+								<tr>
+									<td id="reverseTriangle" onclick="mainViewFrame.setShape('flowChartDataArray');" width="100">데이터배열 </td>
+									<td id="rightAngelTriangle" onclick="mainViewFrame.setShape('flowChartArray');" width="100">차트배열 </td>
+									<td id="rightAngelTriangle" onclick="mainViewFrame.setShape('flowChartStoredData');" width="100">저장된데이터 </td>
+									<td id="rightAngelTriangle" onclick="mainViewFrame.setShape('flowChartDelay');" width="100">연기 </td>
+									<td id="rightAngelTriangle" onclick="mainViewFrame.setShape('flowChartDisk');" width="100">디스크 </td>
+								</tr>
+								<tr>
+									<td id="reverseTriangle" onclick="mainViewFrame.setShape('flowChartDirectAccessDisk');" width="100">직접연결 </td>
+									<td id="rightAngelTriangle" onclick="mainViewFrame.setShape('flowChartCheck');" width="100">체크 </td>
+									<td></td>
+									<td></td>
+									<td></td>
+								</tr>
+							</table>
+						</td>
+						<td class="shapeGroup" style="background: url(img/special.png) no-repeat center; background-size:100%; width:30px; height:30px;">
+							<table style="border:10px solid #ddd;position:absolute; top:30px; left:0px; display:none; width:400px; background-color:#fff;">
+								<tr>
+									<td id="rectangle" onclick="mainViewFrame.setShape('heart');" width="70">하트 </td>
+									<td id="roundrectangle" onclick="mainViewFrame.setShape('lightening');"  width="250">번개 </td>
+									<td></td>
+									<td></td>
+									<td></td>
+								</tr>
+							</table>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<iframe id="mainViewFrame" src="/ppt/mainView.html" frameborder="0" scrolling="yes" allowTransparency="false" style="background-color:#eee;"></iframe>
+		</div>
+	</div>
+	<!-- 푸쉬알림 -->
+	<div class="bubble" id="pushpush" style="position:absolute; clear:left; float:right; right:18px; bottom:20px; visibility: hidden;">
+		<p class="lab">
+			메시지가 도착했습니다.
+		</p>
+	</div>
+	<!-- 채팅창 -->
+	<div style="position:absolute; clear:left; float:right; right:18px; bottom:0px;">
+		<input id="chat-button" type="button" onclick="layer_popup()" style ="background:red; filiter:alpha(opacity=10); opacity:0.5; -moz-opacity:0.5;" value="채팅">
+	</div>
+	<div id="chat" style="position:absolute; clear:left; float:right; right:18px; bottom:20px; border:double; width:300px; height:250px; visibility: hidden; background-color:white;">
+		<div id ="message_list" style="position:absolute; width:300px; height:200px; overFlow:auto;"></div>
+		<div id="inputText" style="position:absolute; float:left; width:300px; height:50px; left:0; bottom:0px;">
+			<input id = "input" onkeydown="if (event.keyCode == 13) send()" type="message">
+			<button onclick="javascript:send();set_room();" type="button">보내기</button>
+		</div>
+	</div>
+
+	<script src="assets/js/jquery.js"></script>
+<script src="assets/js/bootstrap-transition.js"></script>
+<script src="assets/js/bootstrap-alert.js"></script>
+<script src="assets/js/bootstrap-modal.js"></script>
+<script src="assets/js/bootstrap-dropdown.js"></script>
+<script src="assets/js/bootstrap-scrollspy.js"></script>
+<script src="assets/js/bootstrap-tab.js"></script>
+<script src="assets/js/bootstrap-tooltip.js"></script>
+<script src="assets/js/bootstrap-popover.js"></script>
+<script src="assets/js/bootstrap-button.js"></script>
+<script src="assets/js/bootstrap-collapse.js"></script>
+<script src="assets/js/bootstrap-carousel.js"></script>
+<script src="assets/js/bootstrap-typeahead.js"></script>
+</body>
+</html>

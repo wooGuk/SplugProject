@@ -353,6 +353,7 @@ $(function(){
 					parentC.setFillColor(i, selectColor);
 					mainC.gs[i].fillColor = selectColor;
 					getBoxFromparent(i);
+					intervalDraw();
 				}
 			}
 		}
@@ -371,6 +372,7 @@ $(function(){
 					parentC.setStrokeColor(i, selectColor);
 					mainC.gs[i].strokeColor = selectColor;
 					getBoxFromparent(i);
+					intervalDraw();
 				}
 			}
 		}
@@ -667,17 +669,19 @@ $(document).keydown(function(e){
 });
 
 </script>
-
 <html>
+<head>
+</head>
 <body>
-	<div id="btnGroup" style="min-width:700px;height:30px;background-color:pink;">
-		<input type="button" value="선택" onclick="setShape('select');">
-		브러쉬 두께<input type="text" id="brush_size" value="1" style="width:50px;">
-		투명도 0~1<input type="text" id="opacity" value="1" style="width:50px;">
+	<div id="btnGroup" style="min-width:700px;height:30px;background-color:#87CEEB;">
+		<button type="submit" class="btn" onclick="setShape('select');">
+			<img src="img/select.jpg" width="80px" height="15px"/></button>
 		<input type="button" value="선" onclick="setShape('line');">
 		<input type="button" value="네모" onclick="setShape('rect');">
 		<input type="button" value="원" onclick="setShape('circle');">
 		<input type="button" value="텍스트" onclick="setShape('text');">
+		브러쉬 두께<input type="text" id="brush_size" value="1" style="width:50px;">
+		투명도 0~1<input type="text" id="opacity" value="1" style="width:50px;">
 		<div style="display:inline;">
 			선색<div id="strokeColorPicker" style="display:inline;"></div>
 			배경색<div id="fillColorPicker" style="display:inline;"></div>
@@ -686,5 +690,18 @@ $(document).keydown(function(e){
 
 	<div id="textDiv" style="position:absolute; top:30px; left:0px; z-index:3;"></div>
 	<canvas id="mainCanvas" width="640" height="480" style="background-color:#fff; zoom:1;"></canvas>
+
+	<script src="bootstrap-2.3.2/docs/assets/js/bootstrap-transition.js"></script>
+	<script src="bootstrap-2.3.2/docs/assets/js/bootstrap-alert.js"></script>
+	<script src="bootstrap-2.3.2/docs/assets/js/bootstrap-modal.js"></script>
+	<script src="bootstrap-2.3.2/docs/assets/js/bootstrap-dropdown.js"></script>
+	<script src="bootstrap-2.3.2/docs/assets/js/bootstrap-scrollspy.js"></script>
+	<script src="bootstrap-2.3.2/docs/assets/js/bootstrap-tab.js"></script>
+	<script src="bootstrap-2.3.2/docs/assets/js/bootstrap-tooltip.js"></script>
+	<script src="bootstrap-2.3.2/docs/assets/js/bootstrap-popover.js"></script>
+	<script src="bootstrap-2.3.2/docs/assets/js/bootstrap-button.js"></script>
+	<script src="bootstrap-2.3.2/docs/assets/js/bootstrap-collapse.js"></script>
+	<script src="bootstrap-2.3.2/docs/assets/js/bootstrap-carousel.js"></script>
+	<script src="bootstrap-2.3.2/docs/assets/js/bootstrap-typeahead.js"></script>
 </body>
 </html>
